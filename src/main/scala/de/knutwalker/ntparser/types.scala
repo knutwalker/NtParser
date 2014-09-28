@@ -12,7 +12,7 @@ case class Resource(uri: String) extends Node {
   override def toString: String = dataValue
 }
 
-case class Literal(value: String, lang: Option[String], dt: Option[Resource]) extends Node {
+case class Literal(value: String, lang: Option[String] = None, dt: Option[Resource] = None) extends Node {
   private[this] final val dataValue = value
 
   private[this] lazy final val langValue = lang.fold("")("@" + _)

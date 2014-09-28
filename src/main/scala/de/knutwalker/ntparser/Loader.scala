@@ -1,6 +1,6 @@
 package de.knutwalker.ntparser
 
-import java.io.{ Closeable, EOFException, InputStream, PushbackInputStream }
+import java.io.{ Closeable, InputStream, PushbackInputStream }
 import java.nio.charset.Charset
 import java.nio.file.{ FileSystems, Files, Path, StandardOpenOption }
 
@@ -52,18 +52,17 @@ object Loader {
     new PushbackInputStream(is, 3) match {
       case GzipStream(stream)  ⇒ stream
       case Bzip2Stream(stream) ⇒ stream
-      case _                   ⇒ is
+      case x                   ⇒ x
     }
 
   private trait CompressedStream {
 
     final def unapply(stream: PushbackInputStream): Option[InputStream] = {
-      val buf = peekBytes(stream, peekSize)
-      if (matches(buf)) {
-        Some(newStream(stream))
-      }
-      else {
-        None
+      peekBytes(stream, peekSize) flatMap { buf ⇒
+        if (matches(buf))
+          Some(newStream(stream))
+        else
+          None
       }
     }
 
@@ -73,14 +72,21 @@ object Loader {
 
     protected def newStream(is: InputStream): InputStream
 
-    private def peekBytes(stream: PushbackInputStream, n: Int): Array[Byte] = {
+    private def peekBytes(stream: PushbackInputStream, n: Int): Option[Array[Byte]] = {
       val buf = new Array[Byte](n)
       val bytesRead = stream.read(buf)
       if (bytesRead == -1) {
-        throw new EOFException
+        None
       }
-      stream.unread(buf, 0, bytesRead)
-      buf
+      else {
+        stream.unread(buf, 0, bytesRead)
+        if (bytesRead == n) {
+          Some(buf)
+        }
+        else {
+          None
+        }
+      }
     }
   }
 

@@ -2,8 +2,10 @@ package de.knutwalker.ntparser
 
 import java.io.InputStream
 import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
-import java.nio.charset.Charset
+import java.nio.charset.{ StandardCharsets, Charset }
 import java.util.{ Iterator ⇒ JIterator }
+
+import org.slf4j.LoggerFactory
 
 import scala.annotation.{ switch, tailrec }
 import scala.collection.JavaConverters._
@@ -13,11 +15,14 @@ import scala.util.Try
 
 final class NtParser {
 
+  private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
+
   private[this] var input: Array[Char] = new Array[Char](1024)
 
   private[this] var pos = 0
   private[this] var max = 0
   private[this] var cursor: Char = 0
+  private[this] var lineNo = -1
 
   private[this] val sb = new StringBuilder
   private[this] val nodes: ListBuffer[Node] = ListBuffer.empty
@@ -25,16 +30,42 @@ final class NtParser {
 
   def parseOpt(line: String): Option[Statement] = Option(parseOrNull(line))
 
+  def parseOpt(line: String, lineNumber: Int): Option[Statement] = Option(parseOrNull(line, lineNumber))
+
   def parseTry(line: String): Try[Option[Statement]] = Try(Option(parse(line)))
+
+  def parseTry(line: String, lineNumber: Int): Try[Option[Statement]] = Try(Option(parse(line, lineNumber)))
 
   def parseOrNull(line: String): Statement = {
     try parse(line) catch {
-      case pe: ParseError ⇒ null
+      case pe: ParseError ⇒
+        logger.warn(pe.getMessage, pe)
+        null
+    }
+  }
+
+  def parseOrNull(line: String, lineNumber: Int): Statement = {
+    try parse(line, lineNo) catch {
+      case pe: ParseError ⇒
+        logger.warn(pe.getMessage, pe)
+        null
     }
   }
 
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String): Statement = {
+
+    lineNo = -1
+    if (line.isEmpty) null
+    else {
+      reset(line)
+      Line()
+    }
+  }
+
+  @throws[ParseError]("ParseError if a line could not be parsed")
+  def parse(line: String, lineNumber: Int): Statement = {
+    lineNo = lineNumber
     if (line.isEmpty) null
     else {
       reset(line)
@@ -47,7 +78,8 @@ final class NtParser {
     (cursor: @switch) match {
       case '<' ⇒ TripleLine()
       case '_' ⇒ TripleLine()
-      case '#' ⇒ // ignore line
+      case '#' ⇒ // comment line
+      case END ⇒ // empty line
       case _   ⇒ error(LINE_BEGIN)
     }
 
@@ -98,7 +130,7 @@ final class NtParser {
   }
 
   @tailrec private[this] def UriRefCharacters(): Unit = {
-    captureWhile(c ⇒ c != '>' && c != '\\' && c != '%') // TODO: IS_URIREF_CHAR
+    captureWhile(c ⇒ c != '>' && c != '\\' && c != '%' && !IS_WHITESPACE(c)) // TODO: IS_URIREF_CHAR
     (cursor: @switch) match {
       case '>' ⇒ //uriref finish
       case '\\' ⇒
@@ -115,7 +147,7 @@ final class NtParser {
     advance('_') || error('_')
     advance(':') || error(':')
     val start = cursor
-    advance(IS_NAME_START) || error("name identifier")
+    advance(IS_NAME_CHAR) || error("name identifier")
     append(start)
     captureWhile(IS_NAME_CHAR)
     // TODO, maybe advance?
@@ -173,18 +205,24 @@ final class NtParser {
       case '"' ⇒
         append('"')
         advance()
-      case 'n' ⇒
-        append('\n')
-        advance()
-      case 'r' ⇒
-        append('\r')
+      case 'b' ⇒
+        append('\b')
         advance()
       case 't' ⇒
         append('\t')
         advance()
+      case 'n' ⇒
+        append('\n')
+        advance()
+      case 'f' ⇒
+        append('\f')
+        advance()
+      case 'r' ⇒
+        append('\r')
+        advance()
       case 'u' ⇒ Unicode()
       case 'U' ⇒ SuperUnicode()
-      case _   ⇒ error(Array('\\', '"', 'n', 'r', 't', 'u', 'U')) // TODO: ESCAPE_SEQUENCE_CHARS
+      case _   ⇒ error(Array('\\', '"', 'b', 't', 'n', 'f', 'r', 'u', 'U')) // TODO: ESCAPE_SEQUENCE_CHARS
     }
   }
 
@@ -219,7 +257,8 @@ final class NtParser {
       captureHexDigit()
 
   private[this] def captureHexDigit(): Int = {
-    assert(IS_HEX_CHAR(cursor), s"$cursor is not a hex character")
+    IS_HEX_CHAR(cursor) || error("hex character")
+    //    assert(IS_HEX_CHAR(cursor), s"$cursor is not a hex character")
     val r = hexValue(cursor)
     advance()
     r
@@ -361,7 +400,8 @@ final class NtParser {
       case END ⇒ "EOI"
       case x   ⇒ x.toString
     }
-    throwError(s"parsing error at char ${pos + 1}, expected [$s], but found [$cursorChar]")
+    val lineHint = if (lineNo == -1) " " else s" in line $lineNo "
+    throwError(s"parse error${lineHint}at char ${pos + 1}, expected [$s], but found [$cursorChar]")
   }
 
   private[this] def throwError(text: String): Boolean = {
@@ -454,17 +494,15 @@ final class NtParser {
   private[this] val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 }
 
-object NtParser {
-  val `UTF-8` = Charset.forName("UTF-8")
-
+object StrictNtParser {
   def apply(fileName: String): Iterator[Statement] =
-    apply(fileName, `UTF-8`)
+    apply(fileName, StandardCharsets.UTF_8)
 
   def apply(fileName: String, encoding: Charset): Iterator[Statement] =
     apply(Loader.getLines(fileName, encoding))
 
   def apply(is: InputStream): Iterator[Statement] =
-    apply(is, `UTF-8`)
+    apply(is, StandardCharsets.UTF_8)
 
   def apply(is: InputStream, encoding: Charset): Iterator[Statement] =
     apply(Loader.getLines(is, encoding))
@@ -495,6 +533,7 @@ object NtParser {
 
   private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
     private var nextStatement: Statement = _
+    private var currentLineNo = 0
 
     def hasNext: Boolean = nextStatement ne null
 
@@ -508,7 +547,76 @@ object NtParser {
     @tailrec private def advance0(): Statement = {
       if (!underlying.hasNext) null
       else {
-        val line = p.parseOrNull(underlying.next())
+        currentLineNo += 1
+        val nextStatement = p.parse(underlying.next(), currentLineNo)
+        if (nextStatement eq null) advance0()
+        else nextStatement
+      }
+    }
+
+    private def advance(): Statement = {
+      val before = nextStatement
+      nextStatement = advance0()
+      before
+    }
+  }
+}
+
+object NonStrictNtParser {
+  def apply(fileName: String): Iterator[Statement] =
+    apply(fileName, StandardCharsets.UTF_8)
+
+  def apply(fileName: String, encoding: Charset): Iterator[Statement] =
+    apply(Loader.getLines(fileName, encoding))
+
+  def apply(is: InputStream): Iterator[Statement] =
+    apply(is, StandardCharsets.UTF_8)
+
+  def apply(is: InputStream, encoding: Charset): Iterator[Statement] =
+    apply(Loader.getLines(is, encoding))
+
+  def apply(lines: GenIterable[String]): Iterator[Statement] =
+    apply(lines.iterator)
+
+  def apply(lines: Iterator[String]): Iterator[Statement] =
+    new ParsingIterator(new NtParser, lines)
+
+  def parse(fileName: String): JIterator[Statement] =
+    apply(fileName).asJava
+
+  def parse(fileName: String, encoding: Charset): JIterator[Statement] =
+    apply(fileName, encoding).asJava
+
+  def parse(is: InputStream): JIterator[Statement] =
+    apply(is).asJava
+
+  def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
+    apply(is, encoding).asJava
+
+  def parse(lines: JIterable[String]): JIterator[Statement] =
+    apply(lines.asScala).asJava
+
+  def parse(lines: JIterator[String]): JIterator[Statement] =
+    apply(lines.asScala).asJava
+
+  private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
+    private var nextStatement: Statement = _
+    private var currentLineNo = 0
+
+    def hasNext: Boolean = nextStatement ne null
+
+    def next(): Statement = {
+      if (nextStatement eq null) Iterator.empty.next()
+      advance()
+    }
+
+    advance()
+
+    @tailrec private def advance0(): Statement = {
+      if (!underlying.hasNext) null
+      else {
+        currentLineNo += 1
+        val line = p.parseOrNull(underlying.next(), currentLineNo)
         if (line ne null) line
         else advance0()
       }

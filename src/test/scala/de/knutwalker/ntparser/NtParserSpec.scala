@@ -99,7 +99,7 @@ class NtParserSpec extends FunSuite {
       )
     )
 
-    val statements = NtParser(ManyUgly).toList
+    val statements = NonStrictNtParser(ManyUgly).toList
     statements.zip(expecteds) foreach {
       case (actual, expected) ⇒
         assert(actual == expected)
