@@ -5,10 +5,10 @@ import org.scalatest.FunSuite
 class NtParserSpec extends FunSuite {
 
   test("parse simple line") {
-    val line = "_:abc <def> \"ghi\" ."
+    val line = "_:abc <d:ef> \"ghi\" ."
     val statement = parse(line)
     assert(statement.s == BNode("abc"))
-    assert(statement.p == Resource("def"))
+    assert(statement.p == Resource("d:ef"))
     assert(statement.o == Literal.simple("ghi"))
   }
 
@@ -105,12 +105,12 @@ class NtParserSpec extends FunSuite {
   }
 
   test("parse weird things") {
-    val line = """<t%B2t> <""" + '\\' + """uFFFFy> <d> ."""
+    val line = """<t:%B2t> <:""" + '\\' + """uFFFFy> <d:> ."""
     val statement = parse(line)
-    val bs = Array(116.toByte, -17.toByte, -65.toByte, -67.toByte, 116.toByte)
+    val bs = Array(116.toByte, 58.toByte, -17.toByte, -65.toByte, -67.toByte, 116.toByte)
     assert(statement.s == Resource(new String(bs)))
-    assert(statement.p == Resource(new String(Array(65535.toChar, 'y'))))
-    assert(statement.o == Resource("d"))
+    assert(statement.p == Resource(new String(Array(':', 65535.toChar, 'y'))))
+    assert(statement.o == Resource("d:"))
   }
 
   private def parse(line: String) = {

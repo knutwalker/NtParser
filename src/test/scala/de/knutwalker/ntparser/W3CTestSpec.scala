@@ -150,38 +150,30 @@ class W3CTestSpec extends FunSuite {
 
   test("Bad IRI : relative IRI not allowed in subject (negative test) (nt-syntax-bad-uri-06)") {
     val error = intercept[ParseError] {
-      val statements = StrictNtParser("nt-syntax-bad-uri-06.nt").toList
-      println(s"statements = $statements")
-      println("still failing")
+      StrictNtParser("nt-syntax-bad-uri-06.nt").toList
     }
-    assert(error.getMessage.contains("but found [ ]"))
+    assert(error.getMessage.contains("<s> is not absolute"))
   }
 
   test("Bad IRI : relative IRI not allowed in predicate (negative test) (nt-syntax-bad-uri-07)") {
     val error = intercept[ParseError] {
-      val statements = StrictNtParser("nt-syntax-bad-uri-07.nt").toList
-      println(s"statements = $statements")
-      println("still failing")
+      StrictNtParser("nt-syntax-bad-uri-07.nt").toList
     }
-    assert(error.getMessage.contains("but found [ ]"))
+    assert(error.getMessage.contains("<p> is not absolute"))
   }
 
   test("Bad IRI : relative IRI not allowed in object (negative test) (nt-syntax-bad-uri-08)") {
     val error = intercept[ParseError] {
-      val statements = StrictNtParser("nt-syntax-bad-uri-08.nt").toList
-      println(s"statements = $statements")
-      println("still failing")
+      StrictNtParser("nt-syntax-bad-uri-08.nt").toList
     }
-    assert(error.getMessage.contains("but found [ ]"))
+    assert(error.getMessage.contains("<o> is not absolute"))
   }
 
   test("Bad IRI : relative IRI not allowed in datatype (negative test) (nt-syntax-bad-uri-09)") {
     val error = intercept[ParseError] {
-      val statements = StrictNtParser("nt-syntax-bad-uri-09.nt").toList
-      println(s"statements = $statements")
-      println("still failing")
+      StrictNtParser("nt-syntax-bad-uri-09.nt").toList
     }
-    assert(error.getMessage.contains("but found [ ]"))
+    assert(error.getMessage.contains("<dt> is not absolute"))
   }
 
   test("@prefix not allowed in n-triples (negative test) (nt-syntax-bad-prefix-01)") {
@@ -214,11 +206,9 @@ class W3CTestSpec extends FunSuite {
 
   test("langString with bad lang (negative test) (nt-syntax-bad-lang-01)") {
     val error = intercept[ParseError] {
-      val statements = StrictNtParser("nt-syntax-bad-lang-01.nt").toList
-      println(s"statements = $statements")
-      println("still failing")
+      StrictNtParser("nt-syntax-bad-lang-01.nt").toList
     }
-    assert(error.getMessage.contains("but found [ ]"))
+    assert(error.getMessage.contains("expected [language tag identifier], but found [1]"))
   }
 
   test("Bad string escape (negative test) (nt-syntax-bad-esc-01)") {

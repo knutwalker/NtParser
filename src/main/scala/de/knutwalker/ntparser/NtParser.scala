@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 
 import java.io.InputStream
 import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
-import java.nio.charset.{ StandardCharsets, Charset }
+import java.nio.charset.Charset
 import java.util.{ Iterator ⇒ JIterator }
 import scala.annotation.{ switch, tailrec }
 import scala.collection.GenIterable
@@ -118,6 +118,7 @@ final class NtParser {
 
   private[this] def IriRef(): Resource = {
     advance('<') || error('<')
+    IriScheme()
     IriRefCharacters() // captureWhile(IS_URI_CHAR)
     advance('>') || error('>')
     ws()
@@ -128,6 +129,7 @@ final class NtParser {
     advance('_') || error('_')
     advance(':') || error(':')
     val start = cursor
+    // TODO: proper IS_NAME_CHAR according to http://www.w3.org/TR/2014/REC-n-triples-20140225/#grammar-production-BLANK_NODE_LABEL
     advance(IS_NAME_CHAR) || error("name identifier")
     append(start)
     captureWhile(IS_NAME_CHAR)
@@ -151,15 +153,19 @@ final class NtParser {
     lit
   }
 
-  private[this] def TypedLiteral(value: String) = {
-    advance("^^") || error('^')
-    Literal.typed(value, IriRef())
-  }
-
-  private[this] def LangLiteral(value: String) = {
-    advance('@') || error('@')
-    captureUntil(IS_WHITESPACE)
-    Literal.tagged(value, clear())
+  @tailrec private[this] def IriScheme(): Unit = {
+    val IS_SCHEMA_CHAR = (c: Char) ⇒ c > 0x20 && c != ':' && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
+    captureWhile(IS_SCHEMA_CHAR) // TODO: static
+    (cursor: @switch) match {
+      case ':' ⇒ // scheme finish
+      case '\\' ⇒
+        UnicodeEscapedCharacter()
+        IriScheme()
+      case '%' ⇒
+        PercentEscapedCharacter()
+        IriScheme() // TODO: what for n3 representation?
+      case _ ⇒ validationError(s"<${clear()}> is not absolute")
+    }
   }
 
   @tailrec private[this] def IriRefCharacters(): Unit = {
@@ -186,6 +192,35 @@ final class NtParser {
         SlashEscapedCharacter()
         LiteralCharacters()
       case _ ⇒ error(Array('"', '\\')) // TODO: NORMAL_LITERAL_CHARS
+    }
+  }
+
+  private[this] def TypedLiteral(value: String) = {
+    advance("^^") || error('^')
+    Literal.typed(value, IriRef())
+  }
+
+  private[this] def LangLiteral(value: String): Literal = {
+    advance('@') || error('@')
+    captureWhile(IS_NAME_START)
+    (cursor: @switch) match {
+      case ' ' | '\t' ⇒ Literal.tagged(value, clear())
+      case '-'        ⇒ ExtendedLangLiteral(value)
+      case _ ⇒
+        error("language tag identifier")
+        null
+    }
+  }
+
+  private[this] def ExtendedLangLiteral(value: String): Literal = {
+    advance('-') || error('-')
+    append('-')
+    captureWhile(IS_NAME_CHAR)
+    (cursor: @switch) match {
+      case ' ' | '\t' ⇒ Literal.tagged(value, clear())
+      case _ ⇒
+        error("language tag identifier")
+        null
     }
   }
 
@@ -286,10 +321,6 @@ final class NtParser {
     captureHexDigit() * 16 +
     captureHexDigit()).toByte
 
-  private[this] def captureUntil(f: Char ⇒ Boolean): Boolean = {
-    captureWhile(!f(_))
-  }
-
   private[this] def captureWhile(f: Char ⇒ Boolean): Boolean = {
     capture0(f)
     f(cursor)
@@ -298,44 +329,6 @@ final class NtParser {
   @tailrec private[this] def capture0(f: Char ⇒ Boolean): Boolean = {
     if (f(cursor)) append()
     advance(f) && capture0(f)
-  }
-
-  private[this] def capture(c: Char): Boolean = {
-    capture0(c)
-    cursor == c
-  }
-
-  private[this] def capture(except: Array[Char]): Boolean = {
-    capture0(except)
-    except contains cursor
-  }
-
-  @tailrec private[this] def capture0(c: Char): Boolean = {
-    if (cursor != c) append()
-    advance(c) || capture0(c)
-  }
-
-  @tailrec private[this] def capture0(except: Array[Char]): Boolean = {
-    if (!(except contains cursor)) append()
-    advance(except) || capture0(except)
-  }
-
-  private[this] def consume(c: Char): Boolean = {
-    consume0(c)
-    cursor == c
-  }
-
-  private[this] def consume(except: Array[Char]): Boolean = {
-    consume0(except)
-    except contains cursor
-  }
-
-  @tailrec private[this] def consume0(c: Char): Boolean = {
-    advance(c) || consume0(c)
-  }
-
-  @tailrec private[this] def consume0(except: Array[Char]): Boolean = {
-    advance(except) || consume0(except)
   }
 
   @tailrec private[this] def ws(): Boolean = {
@@ -348,18 +341,12 @@ final class NtParser {
     advance(c)
   }
 
-  private[this] def empty(): Boolean = pos == input.length
-
   private[this] def advance(f: Char ⇒ Boolean): Boolean = {
     f(cursor) && advance()
   }
 
   private[this] def advance(s: String): Boolean = {
     s forall advance
-  }
-
-  private[this] def advance(c: Array[Char]): Boolean = {
-    (c contains cursor) && advance()
   }
 
   private[this] def advance(c: Char): Boolean = {
@@ -377,13 +364,8 @@ final class NtParser {
     else false
   }
 
-  private[this] def error(): Boolean = {
-    error(Array.empty[Char])
-  }
-
-  private[this] def error(c: Char): Boolean = {
+  private[this] def error(c: Char): Boolean =
     error(Array(c))
-  }
 
   private[this] def error(c: Array[Char]): Boolean = {
     val expected = c.length match {
@@ -394,13 +376,18 @@ final class NtParser {
     error(expected)
   }
 
-  private[this] def error(s: String) = {
+  private[this] def error(s: String): Boolean = {
     val cursorChar = cursor match {
       case END ⇒ "EOI"
       case x   ⇒ x.toString
     }
     val lineHint = if (lineNo == -1) " " else s" in line $lineNo "
     throwError(s"parse error${lineHint}at char ${pos + 1}, expected [$s], but found [$cursorChar]")
+  }
+
+  private[this] def validationError(s: String): Boolean = {
+    val lineHint = if (lineNo == -1) " " else s" in line $lineNo "
+    throwError(s"parse error${lineHint}at char ${pos + 1}, $s")
   }
 
   private[this] def throwError(text: String): Boolean = {
@@ -435,8 +422,6 @@ final class NtParser {
   private[this] def append(): Unit = append(cursor)
 
   private[this] def append(c: Char): Unit = sb append c
-
-  private[this] def append(b: Byte): Unit = append(Array(b))
 
   private[this] def append(bs: Array[Byte]): Unit = append(Codec.fromUTF8(bs))
 
@@ -474,20 +459,14 @@ final class NtParser {
     else oldArray
   }
 
-  private[this] val `UTF-8` = Charset.forName("UTF-8")
-
   private[this] val END = Char.MinValue
   private[this] val WHITESPACE = Array(' ', '\t')
   private[this] val LINE_BEGIN = Array('<', '_', '#')
-  private[this] val LINE_END = Array('\n', '\r')
   private[this] val SUBJECT_BEGIN = Array('<', '_')
   private[this] val OBJECT_BEGIN = Array('<', '_', '"')
   private[this] val IS_WHITESPACE = (c: Char) ⇒ c == ' ' || c == '\t'
-  private[this] val IS_PRINTABLE = (c: Char) ⇒ c > '\u0020' && c <= '\u007e'
-  private[this] val IS_URI_CHAR = (c: Char) ⇒ IS_PRINTABLE(c) && c != '>' && c != '<'
   private[this] val IS_NAME_START = (c: Char) ⇒ (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
   private[this] val IS_NAME_CHAR = (c: Char) ⇒ IS_NAME_START(c) || c >= '0' && c <= '9'
-  private[this] val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"'
   private[this] val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 }
 

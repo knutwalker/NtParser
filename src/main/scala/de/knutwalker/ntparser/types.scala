@@ -56,9 +56,3 @@ object Statement {
 }
 
 case class Triple(override val s: Node, override val p: Resource, override val o: Node) extends Statement(s, p, o)
-
-case class Quad(override val s: Node, override val p: Resource, override val o: Node, ng: Resource) extends Statement(s, p, o) {
-  override lazy final val n3 = s"${s.n3} ${p.n3} ${o.n3} ${ng.n3} ."
-
-  override def toString: String = s"${super.toString} $ng"
-}

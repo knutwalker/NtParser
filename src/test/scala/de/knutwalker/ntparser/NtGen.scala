@@ -11,7 +11,7 @@ object NtGen {
   def unescapeString(s: String): String =
     java.net.URLDecoder.decode(StringEscapeUtils.unescapeJava(s), "UTF-8")
 
-  def unescapeNode(n: ccNode): ccNode = n match {
+  def unescapeNode(n: ccNode): ccNode = (n: @unchecked) match {
     case ccResource(x)      ⇒ ccResource(unescapeString(x))
     case ccBNode(x)         ⇒ ccBNode(unescapeString(x))
     case ccLiteral(x, a, b) ⇒ ccLiteral(unescapeString(x), a, b)
@@ -46,15 +46,22 @@ object NtGen {
     3 -> slashEscape)).map(_.mkString
   )
 
+  val schema = Gen.alphaStr
+
   val unicodeAndPercentEscapedString = Gen.listOf(Gen.frequency(
     6 -> Gen.alphaChar.map(_.toString),
     2 -> smallUEscape,
     2 -> percentEscape)
   ).map(_.mkString)
 
+  val iriRef = for {
+    s1 ← schema
+    s2 ← unicodeAndPercentEscapedString
+  } yield s1 + ':' + s2
+
   val WhiteSpace = Gen.listOf(Gen.oneOf(' ', '\t')).map(_.mkString)
 
-  val Resource = unicodeAndPercentEscapedString.map(ccResource)
+  val Resource = iriRef.map(ccResource)
   val Literal = slashEscapedString.map(ccLiteral.simple)
   val BNode = Gen.identifier.map(ccBNode)
 
