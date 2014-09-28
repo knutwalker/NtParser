@@ -24,7 +24,7 @@ import java.nio.charset.Charset
 import java.nio.file.{ FileSystems, Files, Path, StandardOpenOption }
 import scala.io.{ Codec, Source }
 
-object Loader {
+private[ntparser] object Loader {
 
   private var streams: List[Closeable] = Nil
 
@@ -43,8 +43,10 @@ object Loader {
   def getLines(is: InputStream, enc: Codec): Iterator[String] =
     Source.fromInputStream(is)(enc).getLines()
 
-  def shutdown() =
+  def shutdown(): Unit = {
     streams.foreach(_.close())
+    streams = List()
+  }
 
   private def openStream(fileName: String): Option[InputStream] =
     Some(toPath(fileName)).

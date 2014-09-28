@@ -24,11 +24,19 @@ import java.nio.charset.Charset
 import java.util.{ Iterator ⇒ JIterator }
 import scala.annotation.{ switch, tailrec }
 import scala.collection.GenIterable
-import scala.collection.JavaConverters.{ asJavaIteratorConverter, asScalaIteratorConverter, iterableAsScalaIterableConverter }
+import scala.collection.JavaConverters.{ asJavaIteratorConverter, asScalaIteratorConverter }
 import scala.collection.mutable.ListBuffer
 import scala.io.Codec
 import scala.util.Try
 
+/**
+ * An NtParser always parses a single line in different modes, depending
+ * on the method that was called.
+ *
+ * @define swallowsErrors
+ *         This methods will swallow parse errors and not
+ *         throw any [[ParseError]]s
+ */
 final class NtParser {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
@@ -44,14 +52,54 @@ final class NtParser {
   private[this] val nodes: ListBuffer[Node] = ListBuffer.empty
   private[this] val statement: Array[Node] = new Array[Node](3)
 
+  /**
+   * Parse a single line into a [[Statement]].
+   *
+   * $swallowsErrors
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @return Some(statement) if a statement could be parsed, otherwise None
+   */
   def parseOpt(line: String): Option[Statement] = Option(parseOrNull(line))
 
+  /**
+   * Parse a single line into a [[Statement]] that is
+   * part of a bigger file at some location.
+   *
+   * $swallowsErrors
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @param lineNumber The current line number
+   * @return Some(statement) if a statement could be parsed, otherwise None
+   */
   def parseOpt(line: String, lineNumber: Int): Option[Statement] = Option(parseOrNull(line, lineNumber))
 
+  /**
+   * Parse a single line into a [[Statement]].
+   *
+   * $swallowsErrors
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
+   */
   def parseTry(line: String): Try[Option[Statement]] = Try(Option(parse(line)))
 
+  /**
+   * Parse a single line into a [[Statement]] that is
+   * part of a bigger file at some location.
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @param lineNumber The current line number
+   * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
+   */
   def parseTry(line: String, lineNumber: Int): Try[Option[Statement]] = Try(Option(parse(line, lineNumber)))
 
+  /**
+   * Parse a single line into a [[Statement]].
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @return The [[Statement]] if it could be parsed, or null otherwise
+   */
   def parseOrNull(line: String): Statement = {
     try parse(line) catch {
       case pe: ParseError ⇒
@@ -60,6 +108,14 @@ final class NtParser {
     }
   }
 
+  /**
+   * Parse a single line into a [[Statement]] that is
+   * part of a bigger file at some location.
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @param lineNumber The current line number
+   * @return The [[Statement]] if it could be parsed, or null otherwise
+   */
   def parseOrNull(line: String, lineNumber: Int): Statement = {
     try parse(line, lineNo) catch {
       case pe: ParseError ⇒
@@ -68,6 +124,13 @@ final class NtParser {
     }
   }
 
+  /**
+   * Parse a single line into a [[Statement]].
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @throws ParseError if a line could not be parsed
+   * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
+   */
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String): Statement = {
     lineNo = -1
@@ -78,6 +141,15 @@ final class NtParser {
     }
   }
 
+  /**
+   * Parse a single line into a [[Statement]] that is
+   * part of a bigger file at some location.
+   *
+   * @param line A string that may contain one [[Statement]]
+   * @param lineNumber The current line number
+   * @throws ParseError if a line could not be parsed
+   * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
+   */
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String, lineNumber: Int): Statement = {
     lineNo = lineNumber
@@ -486,46 +558,133 @@ final class NtParser {
   private[this] val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 }
 
-trait NtParserCompanion {
+private[ntparser] trait NtParserCompanion {
+  /**
+   * Parse a file or resource, assuming UTF-8.
+   *
+   * @param fileName The name of a nt file or resource
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(fileName: String): Iterator[Statement] =
     apply(fileName, Codec.UTF8)
 
+  /**
+   * Parse a file or resource in the given codec.
+   *
+   * @param fileName The name of a nt file or resource
+   * @param codec The codec that will be used to open the file
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(fileName: String, codec: Codec): Iterator[Statement] =
     apply(Loader.getLines(fileName, codec))
 
+  /**
+   * Parse lines from an InputStream, assuming UTF-8.
+   *
+   * @param is the InputStream
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(is: InputStream): Iterator[Statement] =
     apply(is, Codec.UTF8)
 
+  /**
+   * Parse lines from an InputStream in the given coded.
+   *
+   * @param is the InputStream
+   * @param codec The codec that will be used to read the stream
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(is: InputStream, codec: Codec): Iterator[Statement] =
     apply(Loader.getLines(is, codec))
 
+  /**
+   * Parse lines from an Iterable of Strings.
+   *
+   * @param lines An Iterable of all lines of an nt document
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(lines: GenIterable[String]): Iterator[Statement] =
     apply(lines.iterator)
 
+  /**
+   * Parse lines from an Iterator of Strings.
+   *
+   * @param lines An Iterator of all lines of an nt document
+   * @return An Iterator of all [[Statement]]s
+   */
   final def apply(lines: Iterator[String]): Iterator[Statement] =
     parsingIterator(new NtParser, lines)
 
+  /**
+   * Parse a file or resource, assuming UTF-8.
+   *
+   * @param fileName The name of a nt file or resource
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(fileName: String): JIterator[Statement] =
     apply(fileName).asJava
 
+  /**
+   * Parse a file or resource in the given codec.
+   *
+   * @param fileName The name of a nt file or resource
+   * @param encoding The encoding that will be used to open the file
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(fileName: String, encoding: Charset): JIterator[Statement] =
     apply(fileName, Codec.charset2codec(encoding)).asJava
 
+  /**
+   * Parse lines from an InputStream, assuming UTF-8.
+   *
+   * @param is the InputStream
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(is: InputStream): JIterator[Statement] =
     apply(is).asJava
 
+  /**
+   * Parse lines from an InputStream in the given coded.
+   *
+   * @param is the InputStream
+   * @param encoding The encoding that will be used to read the stream
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
     apply(is, Codec.charset2codec(encoding)).asJava
 
+  /**
+   * Parse lines from an Iterable of Strings.
+   *
+   * @param lines An Iterable of all lines of an nt document
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(lines: JIterable[String]): JIterator[Statement] =
-    apply(lines.asScala).asJava
+    apply(lines.iterator().asScala).asJava
 
+  /**
+   * Parse lines from an Iterator of Strings.
+   *
+   * @param lines An Iterator of all lines of an nt document
+   * @return An Iterator of all [[Statement]]s
+   */
   final def parse(lines: JIterator[String]): JIterator[Statement] =
     apply(lines.asScala).asJava
+
+  /**
+   * Closes all opened InputStreams.
+   * Should be called only after parsing is finished and the
+   * Statement Iterator is consumed.
+   */
+  final def close(): Unit =
+    Loader.shutdown()
 
   protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement]
 }
 
+/**
+ * Stops parsing and throws the ParseError on parse error.
+ */
 object StrictNtParser extends NtParserCompanion {
 
   protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
@@ -562,6 +721,9 @@ object StrictNtParser extends NtParserCompanion {
   }
 }
 
+/**
+ * Swallows parse errors and continues parsing.
+ */
 object NonStrictNtParser extends NtParserCompanion {
 
   protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
