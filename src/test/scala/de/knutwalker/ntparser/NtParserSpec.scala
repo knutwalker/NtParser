@@ -62,8 +62,6 @@ class NtParserSpec extends FunSuite {
     assert(statement.o == Literal.tagged(encoded, "de"))
   }
 
-  // TODO: implement http://www.w3.org/2013/N-TriplesTests/
-
   test("parse many lines") {
     val ManyUgly = List(
       """<http://de.dbpedia.org/resource/11'09%2201_""" + '\\' + """u2013_September_11> <http://www.w3.org/2000/01/rdf-schema#label> "11'09\"01 """ + '\\' + """u2013 September 11"@de .""",

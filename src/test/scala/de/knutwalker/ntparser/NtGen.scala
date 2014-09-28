@@ -6,9 +6,9 @@ import org.apache.commons.lang3.StringEscapeUtils
 
 object NtGen {
 
-  def upperAsciiChars(max: Char) = Gen.chooseNum(127.toChar, max, 223.toChar, 228.toChar, 246.toChar, 252.toChar)
+  def upperAsciiChars(max: Char): Gen[Char] = Gen.chooseNum(127.toChar, max, 223.toChar, 228.toChar, 246.toChar, 252.toChar)
 
-  def unescapeString(s: String) =
+  def unescapeString(s: String): String =
     java.net.URLDecoder.decode(StringEscapeUtils.unescapeJava(s), "UTF-8")
 
   def unescapeNode(n: ccNode): ccNode = n match {
@@ -18,11 +18,11 @@ object NtGen {
   }
 
   val smallUEscape = upperAsciiChars(Char.MaxValue).
-    map(c ⇒ "%04X".format(c.toInt)).map(u ⇒ '\\' + s"u$u")
+    map(c ⇒ f"${c.toInt}%04X").map(u ⇒ '\\' + s"u$u")
 
   // TODO: cannot use 3rd party tools to un-escape big U escapes
   val bigUEscape = Gen.chooseNum(Char.MaxValue.toInt + 1, 16777215).
-    map(cp ⇒ "%08X".format(cp)).map(u ⇒ '\\' + s"U$u")
+    map(cp ⇒ f"$cp%08X").map(u ⇒ '\\' + s"U$u")
 
   val otherEscape = Gen.oneOf('r', 't', 'n', '\\', '"').map(c ⇒ List('\\', c).mkString)
 
@@ -33,7 +33,7 @@ object NtGen {
   )
 
   val singlePercentEscape = upperAsciiChars(255.toChar).
-    map(c ⇒ "%02X".format(c.toInt)).map(u ⇒ s"%$u")
+    map(c ⇒ f"${c.toInt}%02X").map(u ⇒ s"%$u")
 
   val percentEscape = Gen.frequency(
     7 -> singlePercentEscape,

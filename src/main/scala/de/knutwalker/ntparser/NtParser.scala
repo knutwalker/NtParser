@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 
 import java.io.InputStream
 import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
-import java.nio.charset.Charset
+import java.nio.charset.{ StandardCharsets, Charset }
 import java.util.{ Iterator ⇒ JIterator }
 import scala.annotation.{ switch, tailrec }
 import scala.collection.GenIterable
@@ -425,11 +425,11 @@ final class NtParser {
 
   private[this] def append(b: Byte): Unit = append(Array(b))
 
-  private[this] def append(bs: Array[Byte]): Unit = sb append newString(bs)
+  private[this] def append(bs: Array[Byte]): Unit = append(Codec.fromUTF8(bs))
+
+  private[this] def append(cs: Array[Char]): Unit = sb append cs
 
   private[this] def append(cp: Int): Unit = sb appendCodePoint cp
-
-  private[this] def newString(bs: Array[Byte]) = new String(bs, `UTF-8`)
 
   private[this] def oversize(minTargetSize: Int): Int = {
     if (minTargetSize == 0) 0
