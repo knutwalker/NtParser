@@ -1,16 +1,16 @@
 package de.knutwalker.ntparser
 
-import java.io.InputStream
-import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
-import java.nio.charset.{ StandardCharsets, Charset }
-import java.util.{ Iterator ⇒ JIterator }
-
 import org.slf4j.LoggerFactory
 
+import java.io.InputStream
+import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
+import java.nio.charset.Charset
+import java.util.{ Iterator ⇒ JIterator }
 import scala.annotation.{ switch, tailrec }
-import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
 import scala.collection.GenIterable
+import scala.collection.JavaConverters.{ asJavaIteratorConverter, asScalaIteratorConverter, iterableAsScalaIterableConverter }
+import scala.collection.mutable.ListBuffer
+import scala.io.Codec
 import scala.util.Try
 
 final class NtParser {
@@ -75,11 +75,11 @@ final class NtParser {
   private[this] def Line(): Statement = {
     ws()
     (cursor: @switch) match {
-      case '<' ⇒ TripleLine()
-      case '_' ⇒ TripleLine()
-      case '#' ⇒ // comment line
+      case '<'      ⇒ TripleLine()
+      case '_'      ⇒ TripleLine()
+      case '#'      ⇒ // comment line
       case '\u0000' ⇒ // empty line, inline char to allow switch statement
-      case _   ⇒ error(LINE_BEGIN)
+      case _        ⇒ error(LINE_BEGIN)
     }
 
     if ((statement(0) ne null) && (statement(1) ne null) && (statement(2) ne null)) {
@@ -95,51 +95,33 @@ final class NtParser {
     ws('.') || error('.')
   }
 
-  //  private[this] def Comment() = {
-  //    consume(LINE_END)
-  //  }
-
   private[this] def Subject(): Unit = {
     (cursor: @switch) match {
-      case '<' ⇒ statement(0) = UriRef()
+      case '<' ⇒ statement(0) = IriRef()
       case '_' ⇒ statement(0) = NamedNode()
       case _   ⇒ error(SUBJECT_BEGIN)
     }
   }
 
   private[this] def Predicate(): Unit = {
-    statement(1) = UriRef()
+    statement(1) = IriRef()
   }
 
   private[this] def Object(): Unit = {
     (cursor: @switch) match {
-      case '<' ⇒ statement(2) = UriRef()
+      case '<' ⇒ statement(2) = IriRef()
       case '_' ⇒ statement(2) = NamedNode()
       case '"' ⇒ statement(2) = LiteralNode()
       case _   ⇒ error(OBJECT_BEGIN)
     }
   }
 
-  private[this] def UriRef(): Resource = {
+  private[this] def IriRef(): Resource = {
     advance('<') || error('<')
-    UriRefCharacters() // captureWhile(IS_URI_CHAR)
+    IriRefCharacters() // captureWhile(IS_URI_CHAR)
     advance('>') || error('>')
     ws()
     Resource(clear())
-  }
-
-  @tailrec private[this] def UriRefCharacters(): Unit = {
-    captureWhile(c ⇒ c != '>' && c != '\\' && c != '%' && !IS_WHITESPACE(c)) // TODO: IS_URIREF_CHAR
-    (cursor: @switch) match {
-      case '>' ⇒ //uriref finish
-      case '\\' ⇒
-        SlashEscapedCharacter()
-        UriRefCharacters()
-      case '%' ⇒
-        PercentEscapedCharacter()
-        UriRefCharacters() // TODO: what for n3 representation?
-      case _ ⇒ error(Array('"', '\\', '%')) // TODO: NORMAL_LITERAL_CHARS
-    }
   }
 
   private[this] def NamedNode(): BNode = {
@@ -161,12 +143,37 @@ final class NtParser {
     advance('"') || error('"')
     val value = clear()
     val lit = (cursor: @switch) match {
-      case '^' ⇒ TypedLiteral(value)
       case '@' ⇒ LangLiteral(value)
+      case '^' ⇒ TypedLiteral(value)
       case _   ⇒ Literal(value, None, None)
     }
     ws()
     lit
+  }
+
+  private[this] def TypedLiteral(value: String) = {
+    advance("^^") || error('^')
+    Literal(value, None, Some(IriRef()))
+  }
+
+  private[this] def LangLiteral(value: String) = {
+    advance('@') || error('@')
+    captureUntil(IS_WHITESPACE)
+    Literal(value, Some(clear()), None)
+  }
+
+  @tailrec private[this] def IriRefCharacters(): Unit = {
+    captureWhile(c ⇒ c != '>' && c != '\\' && c != '%' && !IS_WHITESPACE(c)) // TODO: IS_URIREF_CHAR
+    (cursor: @switch) match {
+      case '>' ⇒ // iriref finish
+      case '\\' ⇒
+        SlashEscapedCharacter()
+        IriRefCharacters()
+      case '%' ⇒
+        PercentEscapedCharacter()
+        IriRefCharacters() // TODO: what for n3 representation?
+      case _ ⇒ error(Array('"', '\\', '%')) // TODO: NORMAL_LITERAL_CHARS
+    }
   }
 
   @tailrec private[this] def LiteralCharacters(): Unit = {
@@ -177,21 +184,6 @@ final class NtParser {
         SlashEscapedCharacter()
         LiteralCharacters()
       case _ ⇒ error(Array('"', '\\')) // TODO: NORMAL_LITERAL_CHARS
-    }
-  }
-
-  private[this] def PercentEscapedCharacter(): Unit = {
-    advance('%') || error('%') // TODO: advance && error => mustAdvance
-    append(percentEscaped0(0, new Array[Byte](1)))
-  }
-
-  @tailrec private[this] def percentEscaped0(idx: Int, buf: Array[Byte]): Array[Byte] = {
-    buf(idx) = capturePercentDigits()
-    cursor match {
-      case '%' ⇒
-        advance()
-        percentEscaped0(idx + 1, grow(buf, idx + 2))
-      case _ ⇒ buf
     }
   }
 
@@ -230,20 +222,16 @@ final class NtParser {
     append(captureUnicodeDigits())
   }
 
-  private[this] def SuperUnicode(): Unit = {
-    advance('U') || error('U')
-    append(captureSuperUnicodeDigits())
-  }
-
-  private[this] def capturePercentDigits(): Byte = (
-    captureHexDigit() * 16 +
-    captureHexDigit()).toByte
-
   private[this] def captureUnicodeDigits(): Char = (
     captureHexDigit() * 4096 +
     captureHexDigit() * 256 +
     captureHexDigit() * 16 +
     captureHexDigit()).toChar
+
+  private[this] def SuperUnicode(): Unit = {
+    advance('U') || error('U')
+    append(captureSuperUnicodeDigits())
+  }
 
   private[this] def captureSuperUnicodeDigits(): Int =
     captureHexDigit() * 268435456 +
@@ -257,34 +245,32 @@ final class NtParser {
 
   private[this] def captureHexDigit(): Int = {
     IS_HEX_CHAR(cursor) || error("hex character")
-    //    assert(IS_HEX_CHAR(cursor), s"$cursor is not a hex character")
     val r = hexValue(cursor)
     advance()
     r
   }
 
-  //  @tailrec private[this] def captureHexDigits0(index: Int, len: Int, buf: Array[Char]): Char = {
-  //    if (index < len) {
-  //      IS_HEX_CHAR(cursor) || error(Array('a')) // TODD: HEX_CHARS  // TODO: F || error => require(That)
-  //      buf(index) = cursor
-  //      advance()
-  //      captureHexDigits0(index + 1, len, buf)
-  //    }
-  //    else {
-  //      java.lang.Integer.parseInt(new String(buf), 16).asInstanceOf[Char]
-  //    }
-  //  }
+  private[this] def hexValue(c: Char): Int =
+    (c & 0x1f) + ((c >> 6) * 0x19) - 0x10
 
-  private[this] def TypedLiteral(value: String) = {
-    advance("^^") || error('^')
-    Literal(value, None, Some(UriRef()))
+  private[this] def PercentEscapedCharacter(): Unit = {
+    advance('%') || error('%') // TODO: advance && error => mustAdvance
+    append(percentEscaped0(0, new Array[Byte](1)))
   }
 
-  private[this] def LangLiteral(value: String) = {
-    advance('@') || error('@')
-    captureUntil(IS_WHITESPACE)
-    Literal(value, Some(clear()), None)
+  @tailrec private[this] def percentEscaped0(idx: Int, buf: Array[Byte]): Array[Byte] = {
+    buf(idx) = capturePercentDigits()
+    cursor match {
+      case '%' ⇒
+        advance()
+        percentEscaped0(idx + 1, grow(buf, idx + 2))
+      case _ ⇒ buf
+    }
   }
+
+  private[this] def capturePercentDigits(): Byte = (
+    captureHexDigit() * 16 +
+    captureHexDigit()).toByte
 
   private[this] def captureUntil(f: Char ⇒ Boolean): Boolean = {
     captureWhile(!f(_))
@@ -444,8 +430,6 @@ final class NtParser {
 
   private[this] def newString(bs: Array[Byte]) = new String(bs, `UTF-8`)
 
-  private[this] def hexValue(c: Char): Int = (c & 0x1f) + ((c >> 6) * 0x19) - 0x10
-
   private[this] def oversize(minTargetSize: Int): Int = {
     if (minTargetSize == 0) 0
     else {
@@ -493,42 +477,50 @@ final class NtParser {
   private[this] val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 }
 
-object StrictNtParser {
-  def apply(fileName: String): Iterator[Statement] =
-    apply(fileName, StandardCharsets.UTF_8)
+trait NtParserCompanion {
+  final def apply(fileName: String): Iterator[Statement] =
+    apply(fileName, Codec.UTF8)
 
-  def apply(fileName: String, encoding: Charset): Iterator[Statement] =
-    apply(Loader.getLines(fileName, encoding))
+  final def apply(fileName: String, codec: Codec): Iterator[Statement] =
+    apply(Loader.getLines(fileName, codec))
 
-  def apply(is: InputStream): Iterator[Statement] =
-    apply(is, StandardCharsets.UTF_8)
+  final def apply(is: InputStream): Iterator[Statement] =
+    apply(is, Codec.UTF8)
 
-  def apply(is: InputStream, encoding: Charset): Iterator[Statement] =
-    apply(Loader.getLines(is, encoding))
+  final def apply(is: InputStream, codec: Codec): Iterator[Statement] =
+    apply(Loader.getLines(is, codec))
 
-  def apply(lines: GenIterable[String]): Iterator[Statement] =
+  final def apply(lines: GenIterable[String]): Iterator[Statement] =
     apply(lines.iterator)
 
-  def apply(lines: Iterator[String]): Iterator[Statement] =
-    new ParsingIterator(new NtParser, lines)
+  final def apply(lines: Iterator[String]): Iterator[Statement] =
+    parsingIterator(new NtParser, lines)
 
-  def parse(fileName: String): JIterator[Statement] =
+  final def parse(fileName: String): JIterator[Statement] =
     apply(fileName).asJava
 
-  def parse(fileName: String, encoding: Charset): JIterator[Statement] =
-    apply(fileName, encoding).asJava
+  final def parse(fileName: String, encoding: Charset): JIterator[Statement] =
+    apply(fileName, Codec.charset2codec(encoding)).asJava
 
-  def parse(is: InputStream): JIterator[Statement] =
+  final def parse(is: InputStream): JIterator[Statement] =
     apply(is).asJava
 
-  def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
-    apply(is, encoding).asJava
+  final def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
+    apply(is, Codec.charset2codec(encoding)).asJava
 
-  def parse(lines: JIterable[String]): JIterator[Statement] =
+  final def parse(lines: JIterable[String]): JIterator[Statement] =
     apply(lines.asScala).asJava
 
-  def parse(lines: JIterator[String]): JIterator[Statement] =
+  final def parse(lines: JIterator[String]): JIterator[Statement] =
     apply(lines.asScala).asJava
+
+  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement]
+}
+
+object StrictNtParser extends NtParserCompanion {
+
+  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
+    new ParsingIterator(parser, lines)
 
   private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
     private var nextStatement: Statement = _
@@ -561,42 +553,10 @@ object StrictNtParser {
   }
 }
 
-object NonStrictNtParser {
-  def apply(fileName: String): Iterator[Statement] =
-    apply(fileName, StandardCharsets.UTF_8)
+object NonStrictNtParser extends NtParserCompanion {
 
-  def apply(fileName: String, encoding: Charset): Iterator[Statement] =
-    apply(Loader.getLines(fileName, encoding))
-
-  def apply(is: InputStream): Iterator[Statement] =
-    apply(is, StandardCharsets.UTF_8)
-
-  def apply(is: InputStream, encoding: Charset): Iterator[Statement] =
-    apply(Loader.getLines(is, encoding))
-
-  def apply(lines: GenIterable[String]): Iterator[Statement] =
-    apply(lines.iterator)
-
-  def apply(lines: Iterator[String]): Iterator[Statement] =
-    new ParsingIterator(new NtParser, lines)
-
-  def parse(fileName: String): JIterator[Statement] =
-    apply(fileName).asJava
-
-  def parse(fileName: String, encoding: Charset): JIterator[Statement] =
-    apply(fileName, encoding).asJava
-
-  def parse(is: InputStream): JIterator[Statement] =
-    apply(is).asJava
-
-  def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
-    apply(is, encoding).asJava
-
-  def parse(lines: JIterable[String]): JIterator[Statement] =
-    apply(lines.asScala).asJava
-
-  def parse(lines: JIterator[String]): JIterator[Statement] =
-    apply(lines.asScala).asJava
+  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
+    new ParsingIterator(parser, lines)
 
   private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
     private var nextStatement: Statement = _

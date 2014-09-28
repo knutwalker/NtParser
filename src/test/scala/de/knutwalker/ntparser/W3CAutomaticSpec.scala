@@ -53,7 +53,6 @@ case object Negative extends TestType
 
 case class TestCase(name: String, comment: String, file: String, testType: TestType, approval: Approval)
 
-
 class W3CAutomaticSpec extends FunSuite {
   import de.knutwalker.ntparser.implicits._
 
@@ -132,5 +131,5 @@ class W3CAutomaticSpec extends FunSuite {
     tests foreach println
   }
 
-//  generateTests()
+  //  generateTests()
 }

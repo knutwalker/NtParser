@@ -23,7 +23,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
     forAllNoShrink(NtGen.InvalidPredicate -> "triple") {
       case (line, (atPos, wrongChar)) =>
         val parser = new NtParser
-        val expected = s"parsing error at char $atPos, expected [<], but found [$wrongChar]"
+        val expected = s"parse error at char $atPos, expected [<], but found [$wrongChar]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
 
@@ -36,7 +36,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
     forAllNoShrink(NtGen.InvalidSubject -> "triple") {
       case (line, _) =>
         val parser = new NtParser
-        val expected = s"parsing error at char 1, expected [<, _, or #], but found [${'"'}]"
+        val expected = s"parse error at char 1, expected [<, _, or #], but found [${'"'}]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
         thrown.getMessage.split('\n').head shouldBe expected
@@ -48,7 +48,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
     forAllNoShrink(NtGen.MissingDot -> "triple") {
       case (line, atPos) =>
         val parser = new NtParser
-        val expected = s"parsing error at char $atPos, expected [.], but found [EOI]"
+        val expected = s"parse error at char $atPos, expected [.], but found [EOI]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
         thrown.getMessage.split('\n').head shouldBe expected
@@ -96,7 +96,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
     }
   }
 
-  def forAllNoShrink[A](genAndNameA: (Gen[A], String), configParams: PropertyCheckConfigParam*)(fun: (A) => Unit)(implicit config: PropertyCheckConfig) {
+  def forAllNoShrink[A](genAndNameA: (Gen[A], String), configParams: PropertyCheckConfigParam*)(fun: (A) => Unit)(implicit config: PropertyCheckConfig): Unit = {
     val noShrink: Shrink[A] = Shrink.shrinkAny
     forAll(genAndNameA, configParams: _*)(fun)(config, noShrink)
   }

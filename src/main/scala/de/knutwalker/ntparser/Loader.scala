@@ -1,11 +1,12 @@
 package de.knutwalker.ntparser
 
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+
 import java.io.{ Closeable, InputStream, PushbackInputStream }
 import java.nio.charset.Charset
 import java.nio.file.{ FileSystems, Files, Path, StandardOpenOption }
-
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+import scala.io.{ Codec, Source }
 
 object Loader {
 
@@ -17,8 +18,14 @@ object Loader {
   def getLines(fileName: String, enc: Charset): Iterator[String] =
     apply(fileName).map(getLines(_, enc)).getOrElse(Iterator.empty)
 
+  def getLines(fileName: String, enc: Codec): Iterator[String] =
+    apply(fileName).map(getLines(_, enc)).getOrElse(Iterator.empty)
+
   def getLines(is: InputStream, enc: Charset): Iterator[String] =
-    scala.io.Source.fromInputStream(is)(enc).getLines()
+    Source.fromInputStream(is)(enc).getLines()
+
+  def getLines(is: InputStream, enc: Codec): Iterator[String] =
+    Source.fromInputStream(is)(enc).getLines()
 
   def shutdown() =
     streams.foreach(_.close())
@@ -57,14 +64,11 @@ object Loader {
 
   private trait CompressedStream {
 
-    final def unapply(stream: PushbackInputStream): Option[InputStream] = {
+    final def unapply(stream: PushbackInputStream): Option[InputStream] =
       peekBytes(stream, peekSize) flatMap { buf ⇒
-        if (matches(buf))
-          Some(newStream(stream))
-        else
-          None
+        if (matches(buf)) Some(newStream(stream))
+        else None
       }
-    }
 
     protected def peekSize: Int
 
@@ -75,17 +79,11 @@ object Loader {
     private def peekBytes(stream: PushbackInputStream, n: Int): Option[Array[Byte]] = {
       val buf = new Array[Byte](n)
       val bytesRead = stream.read(buf)
-      if (bytesRead == -1) {
-        None
-      }
+      if (bytesRead == -1) None
       else {
         stream.unread(buf, 0, bytesRead)
-        if (bytesRead == n) {
-          Some(buf)
-        }
-        else {
-          None
-        }
+        if (bytesRead == n) Some(buf)
+        else None
       }
     }
   }

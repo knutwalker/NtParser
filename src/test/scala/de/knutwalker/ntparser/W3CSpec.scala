@@ -81,15 +81,12 @@ class W3CSpec extends FunSuite {
     )
   }
 
-
-
-
-  private def spec(description: String, fileName: String)(f: => List[Statement]): Unit = {
+  private def spec(description: String, fileName: String)(f: ⇒ List[Statement]): Unit = {
     test(description) {
       val actualStatements = StrictNtParser(fileName).toList
       val expectedStatements = f
       actualStatements.zip(expectedStatements) foreach {
-        case (actual, expected) =>
+        case (actual, expected) ⇒
           assert(actual == expected)
       }
     }
