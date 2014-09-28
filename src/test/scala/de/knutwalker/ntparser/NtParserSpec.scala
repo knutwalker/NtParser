@@ -9,7 +9,7 @@ class NtParserSpec extends FunSuite {
     val statement = parse(line)
     assert(statement.s == BNode("abc"))
     assert(statement.p == Resource("def"))
-    assert(statement.o == Literal("ghi", None, None))
+    assert(statement.o == Literal.simple("ghi"))
   }
 
   test("parse line with url encoding and language hint") {
@@ -17,7 +17,7 @@ class NtParserSpec extends FunSuite {
     val statement = parse(line)
     assert(statement.s == Resource("http://de.dbpedia.org/resource/Wiera_\"Vera\"_Gran"))
     assert(statement.p == Resource("http://www.w3.org/2000/01/rdf-schema#label"))
-    assert(statement.o == Literal("Wiera \"Vera\" Gran", Some("de"), None))
+    assert(statement.o == Literal.tagged("Wiera \"Vera\" Gran", "de"))
   }
 
   test("parse line with unicode encoding") {
@@ -25,7 +25,7 @@ class NtParserSpec extends FunSuite {
     val statement = parse(line)
     assert(statement.s == Resource("http://de.dbpedia.org/resource/Hofer_\"Wärschtlamo\""))
     assert(statement.p == Resource("http://www.w3.org/2000/01/rdf-schema#label"))
-    assert(statement.o == Literal("Hofer \"Wärschtl\\amo\"", Some("de"), None))
+    assert(statement.o == Literal.tagged("Hofer \"Wärschtl\\amo\"", "de"))
   }
 
   test("parse line with more encodings") {
@@ -33,7 +33,7 @@ class NtParserSpec extends FunSuite {
     val statement = parse(line)
     assert(statement.s == Resource("http://de.dbpedia.org/resource/GIGA\\\\GAMES"))
     assert(statement.p == Resource("http://www.w3.org/2000/01/rdf-schema#label"))
-    assert(statement.o == Literal("GIGA\\\\GAMES", Some("de"), None))
+    assert(statement.o == Literal.tagged("GIGA\\\\GAMES", "de"))
   }
 
   test("parse line with multi byte unicode encodings") {
@@ -59,7 +59,7 @@ class NtParserSpec extends FunSuite {
 
     assert(statement.s == Resource("http://de.dbpedia.org/resource/" + encoded))
     assert(statement.p == Resource("http://www.w3.org/2000/01/rdf-schema#label"))
-    assert(statement.o == Literal(encoded, Some("de"), None))
+    assert(statement.o == Literal.tagged(encoded, "de"))
   }
 
   // TODO: implement http://www.w3.org/2013/N-TriplesTests/
@@ -75,27 +75,27 @@ class NtParserSpec extends FunSuite {
       Triple(
         Resource("http://de.dbpedia.org/resource/11'09\"01_–_September_11"),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("11'09\"01 – September 11", Some("de"), None)
+        Literal.tagged("11'09\"01 – September 11", "de")
       ),
       Triple(
         Resource("http://de.dbpedia.org/resource/Hofer_\"Wärschtlamo\""),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("Hofer \"Wärschtlamo\"", Some("de"), None)
+        Literal.tagged("Hofer \"Wärschtlamo\"", "de")
       ),
       Triple(
         Resource("http://de.dbpedia.org/resource/Hochschule_für_Musik_\"Hanns_Eisler\""),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("Hochschule für Musik \"Hanns Eisler\"", Some("de"), None)
+        Literal.tagged("Hochschule für Musik \"Hanns Eisler\"", "de")
       ),
       Triple(
         Resource("http://de.dbpedia.org/resource/Kommunistischer_Jugendverband_Deutschlands_(Zentralorgan_\"Kämpfende_Jugend\")"),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("Kommunistischer Jugendverband Deutschlands (Zentralorgan \"Kämpfende Jugend\")", Some("de"), None)
+        Literal.tagged("Kommunistischer Jugendverband Deutschlands (Zentralorgan \"Kämpfende Jugend\")", "de")
       ),
       Triple(
         Resource("http://de.dbpedia.org/resource/Hochschule_für_Musik_\"Carl_Maria_von_Weber\""),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("Hochschule für Musik \"Carl Maria von Weber\"", Some("de"), None)
+        Literal.tagged("Hochschule für Musik \"Carl Maria von Weber\"", "de")
       )
     )
 

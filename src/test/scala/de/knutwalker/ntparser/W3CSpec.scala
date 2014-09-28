@@ -14,12 +14,12 @@ class W3CSpec extends FunSuite {
       Triple(
         BNode("subject1"),
         Resource("http://an.example/predicate1"),
-        Literal("object1")
+        Literal.simple("object1")
       ),
       Triple(
         BNode("subject2"),
         Resource("http://an.example/predicate2"),
-        Literal("object2")
+        Literal.simple("object2")
       )
     )
   }
@@ -39,37 +39,37 @@ class W3CSpec extends FunSuite {
       Triple(
         Resource("http://example.org/show/218"),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("That Seventies Show", None, Some(Resource("http://www.w3.org/2001/XMLSchema#string")))
+        Literal.typed("That Seventies Show", Resource("http://www.w3.org/2001/XMLSchema#string"))
       ),
       Triple(
         Resource("http://example.org/show/218"),
         Resource("http://www.w3.org/2000/01/rdf-schema#label"),
-        Literal("That Seventies Show")
+        Literal.simple("That Seventies Show")
       ),
       Triple(
         Resource("http://example.org/show/218"),
         Resource("http://example.org/show/localName"),
-        Literal("That Seventies Show", Some("en"))
+        Literal.tagged("That Seventies Show", "en")
       ),
       Triple(
         Resource("http://example.org/show/218"),
         Resource("http://example.org/show/localName"),
-        Literal("Cette Série des Années Septante", Some("fr-be"))
+        Literal.tagged("Cette Série des Années Septante", "fr-be")
       ),
       Triple(
         Resource("http://example.org/#spiderman"),
         Resource("http://example.org/text"),
-        Literal("This is a multi-line\nliteral with many quotes (\"\"\"\"\")\nand two apostrophes ('').")
+        Literal.simple("This is a multi-line\nliteral with many quotes (\"\"\"\"\")\nand two apostrophes ('').")
       ),
       Triple(
         Resource("http://en.wikipedia.org/wiki/Helium"),
         Resource("http://example.org/elements/atomicNumber"),
-        Literal("2", None, Some(Resource("http://www.w3.org/2001/XMLSchema#integer")))
+        Literal.typed("2", Resource("http://www.w3.org/2001/XMLSchema#integer"))
       ),
       Triple(
         Resource("http://en.wikipedia.org/wiki/Helium"),
         Resource("http://example.org/elements/specificGravity"),
-        Literal("1.663E-4", None, Some(Resource("http://www.w3.org/2001/XMLSchema#double")))
+        Literal.typed("1.663E-4", Resource("http://www.w3.org/2001/XMLSchema#double"))
       )
     )
   }

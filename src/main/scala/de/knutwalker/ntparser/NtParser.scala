@@ -145,7 +145,7 @@ final class NtParser {
     val lit = (cursor: @switch) match {
       case '@' ⇒ LangLiteral(value)
       case '^' ⇒ TypedLiteral(value)
-      case _   ⇒ Literal(value, None, None)
+      case _   ⇒ Literal.simple(value)
     }
     ws()
     lit
@@ -153,13 +153,13 @@ final class NtParser {
 
   private[this] def TypedLiteral(value: String) = {
     advance("^^") || error('^')
-    Literal(value, None, Some(IriRef()))
+    Literal.typed(value, IriRef())
   }
 
   private[this] def LangLiteral(value: String) = {
     advance('@') || error('@')
     captureUntil(IS_WHITESPACE)
-    Literal(value, Some(clear()), None)
+    Literal.tagged(value, clear())
   }
 
   @tailrec private[this] def IriRefCharacters(): Unit = {
@@ -177,7 +177,8 @@ final class NtParser {
   }
 
   @tailrec private[this] def LiteralCharacters(): Unit = {
-    captureWhile(c ⇒ c != '"' && c != '\\') // TODO: IS_NORMAL_LITERAL_CHAR
+    val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
+    captureWhile(IS_LITERAL_CHAR) // TODO: static
     (cursor: @switch) match {
       case '"' ⇒ //string finish
       case '\\' ⇒

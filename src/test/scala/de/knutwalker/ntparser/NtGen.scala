@@ -55,7 +55,7 @@ object NtGen {
   val WhiteSpace = Gen.listOf(Gen.oneOf(' ', '\t')).map(_.mkString)
 
   val Resource = slashAndPercentEscapedString.map(ccResource)
-  val Literal = slashEscapedString.map(ccLiteral(_, None, None))
+  val Literal = slashEscapedString.map(ccLiteral.simple)
   val BNode = Gen.identifier.map(ccBNode)
 
   val Subject = Gen.oneOf(Resource, BNode)
