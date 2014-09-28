@@ -9,21 +9,23 @@ NtParser is published to [Maven Central][mvn]:
 
 
 ```xml
+<!-- for Scala 2.10 -->
 <dependency>
     <groupId>de.knutwalker</groupId>
-    <artifactId>ntparser</artifactId>
+    <artifactId>ntparser_2.10</artifactId>
+    <version>0.1</version>
+</dependency>
+<!-- for Scala 2.11 -->
+<dependency>
+    <groupId>de.knutwalker</groupId>
+    <artifactId>ntparser_2.11</artifactId>
     <version>0.1</version>
 </dependency>
 ```
 
 
 ```scala
-libraryDependencies += "de.knutwalker" % "ntparser" % "0.1"
-```
-
-
-```groovy
-compile 'de.knutwalker:ntparser:0.1'
+libraryDependencies += "de.knutwalker" %% "ntparser" % "0.1"
 ```
 
 
