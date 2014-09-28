@@ -13,19 +13,19 @@ NtParser is published to [Maven Central][mvn]:
 <dependency>
     <groupId>de.knutwalker</groupId>
     <artifactId>ntparser_2.10</artifactId>
-    <version>0.1</version>
+    <version>0.1.0</version>
 </dependency>
 <!-- for Scala 2.11 -->
 <dependency>
     <groupId>de.knutwalker</groupId>
     <artifactId>ntparser_2.11</artifactId>
-    <version>0.1</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
 
 ```scala
-libraryDependencies += "de.knutwalker" %% "ntparser" % "0.1"
+libraryDependencies += "de.knutwalker" %% "ntparser" % "0.1.0"
 ```
 
 
