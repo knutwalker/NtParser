@@ -1,0 +1,309 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>ntparser - de.knutwalker.ntparser</title>
+          <meta name="description" content="ntparser - de.knutwalker.ntparser" />
+          <meta name="keywords" content="ntparser de.knutwalker.ntparser" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'de.knutwalker.ntparser.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="de">de</a>.<a href="../package.html" class="extype" name="de.knutwalker">knutwalker</a></p>
+        <h1>ntparser</h1> <span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ntparser</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="de.knutwalker.ntparser.BNode" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BNodeextendsNodewithProductwithSerializable"></a>
+      <a id="BNode:BNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BNode.html"><span class="name">BNode</span></a><span class="params">(<span name="nodeId">nodeId: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@BNodeextendsNodewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.Literal" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LiteralextendsNodewithProductwithSerializable"></a>
+      <a id="Literal:Literal"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Literal.html"><span class="name">Literal</span></a><span class="params">(<span name="lexical">lexical: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="lang">lang: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dt">dt: <a href="Resource.html" class="extype" name="de.knutwalker.ntparser.Resource">Resource</a></span>)</span><span class="result"> extends <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@LiteralextendsNodewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.Node" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="NodeextendsAnyRef"></a>
+      <a id="Node:Node"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Node.html"><span class="name">Node</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@NodeextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.NtParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NtParserextendsAnyRef"></a>
+      <a id="NtParser:NtParser"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="NtParser.html"><span class="name">NtParser</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@NtParserextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An NtParser always parses a single line in different modes, depending
+on the method that was called.</p>
+    </li><li name="de.knutwalker.ntparser.ParseError" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ParseErrorextendsException"></a>
+      <a id="ParseError:ParseError"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="ParseError.html"><span class="name">ParseError</span></a><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@ParseErrorextendsException" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.Resource" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ResourceextendsNodewithProductwithSerializable"></a>
+      <a id="Resource:Resource"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Resource.html"><span class="name">Resource</span></a><span class="params">(<span name="uri">uri: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@ResourceextendsNodewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.Statement" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="StatementextendsNode"></a>
+      <a id="Statement:Statement"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Statement.html"><span class="name">Statement</span></a><span class="result"> extends <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@StatementextendsNode" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.Triple" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TripleextendsStatementwithProductwithSerializable"></a>
+      <a id="Triple:Triple"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Triple.html"><span class="name">Triple</span></a><span class="params">(<span name="s">s: <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a></span>, <span name="p">p: <a href="Resource.html" class="extype" name="de.knutwalker.ntparser.Resource">Resource</a></span>, <span name="o">o: <a href="Node.html" class="extype" name="de.knutwalker.ntparser.Node">Node</a></span>)</span><span class="result"> extends <a href="Statement.html" class="extype" name="de.knutwalker.ntparser.Statement">Statement</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@TripleextendsStatementwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="de.knutwalker.ntparser.Literal" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Literal"></a>
+      <a id="Literal:Literal"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Literal$.html"><span class="name">Literal</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@Literal" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.NonStrictNtParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NonStrictNtParser"></a>
+      <a id="NonStrictNtParser:NonStrictNtParser"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="NonStrictNtParser$.html"><span class="name">NonStrictNtParser</span></a><span class="result"> extends <span class="extype" name="de.knutwalker.ntparser.NtParserCompanion">NtParserCompanion</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@NonStrictNtParser" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Swallows parse errors and continues parsing.</p>
+    </li><li name="de.knutwalker.ntparser.Statement" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Statement"></a>
+      <a id="Statement:Statement"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Statement$.html"><span class="name">Statement</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@Statement" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="de.knutwalker.ntparser.StrictNtParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="StrictNtParser"></a>
+      <a id="StrictNtParser:StrictNtParser"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="StrictNtParser$.html"><span class="name">StrictNtParser</span></a><span class="result"> extends <span class="extype" name="de.knutwalker.ntparser.NtParserCompanion">NtParserCompanion</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#de.knutwalker.ntparser.package@StrictNtParser" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Stops parsing and throws the ParseError on parse error.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
