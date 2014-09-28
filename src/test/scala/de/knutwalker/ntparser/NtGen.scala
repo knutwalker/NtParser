@@ -46,15 +46,15 @@ object NtGen {
     3 -> slashEscape)).map(_.mkString
   )
 
-  val slashAndPercentEscapedString = Gen.listOf(Gen.frequency(
+  val unicodeAndPercentEscapedString = Gen.listOf(Gen.frequency(
     6 -> Gen.alphaChar.map(_.toString),
-    2 -> slashEscape,
+    2 -> smallUEscape,
     2 -> percentEscape)
   ).map(_.mkString)
 
   val WhiteSpace = Gen.listOf(Gen.oneOf(' ', '\t')).map(_.mkString)
 
-  val Resource = slashAndPercentEscapedString.map(ccResource)
+  val Resource = unicodeAndPercentEscapedString.map(ccResource)
   val Literal = slashEscapedString.map(ccLiteral.simple)
   val BNode = Gen.identifier.map(ccBNode)
 

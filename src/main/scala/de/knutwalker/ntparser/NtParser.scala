@@ -163,16 +163,17 @@ final class NtParser {
   }
 
   @tailrec private[this] def IriRefCharacters(): Unit = {
-    captureWhile(c ⇒ c != '>' && c != '\\' && c != '%' && !IS_WHITESPACE(c)) // TODO: IS_URIREF_CHAR
+    val IS_IRIREF_CHAR = (c: Char) ⇒ c > 0x20 && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
+    captureWhile(IS_IRIREF_CHAR) // TODO: static
     (cursor: @switch) match {
       case '>' ⇒ // iriref finish
       case '\\' ⇒
-        SlashEscapedCharacter()
+        UnicodeEscapedCharacter()
         IriRefCharacters()
       case '%' ⇒
         PercentEscapedCharacter()
         IriRefCharacters() // TODO: what for n3 representation?
-      case _ ⇒ error(Array('"', '\\', '%')) // TODO: NORMAL_LITERAL_CHARS
+      case _ ⇒ error(Array('>', '\\', '%')) // TODO: NORMAL_IRIREF_CHARS
     }
   }
 
@@ -188,6 +189,15 @@ final class NtParser {
     }
   }
 
+  private[this] def UnicodeEscapedCharacter(): Unit = {
+    advance('\\') || error('\\') // TODO: advance && error => mustAdvance
+    (cursor: @switch) match {
+      case 'u' ⇒ Unicode()
+      case 'U' ⇒ SuperUnicode()
+      case _   ⇒ error(Array('u', 'U')) // TODO: UNICODE_ESCAPE_SEQUENCE_CHARS
+    }
+  }
+
   private[this] def SlashEscapedCharacter(): Unit = {
     advance('\\') || error('\\') // TODO: advance && error => mustAdvance
     (cursor: @switch) match {
@@ -196,6 +206,9 @@ final class NtParser {
         advance()
       case '"' ⇒
         append('"')
+        advance()
+      case '\'' ⇒
+        append('\'')
         advance()
       case 'b' ⇒
         append('\b')
@@ -214,7 +227,7 @@ final class NtParser {
         advance()
       case 'u' ⇒ Unicode()
       case 'U' ⇒ SuperUnicode()
-      case _   ⇒ error(Array('\\', '"', 'b', 't', 'n', 'f', 'r', 'u', 'U')) // TODO: ESCAPE_SEQUENCE_CHARS
+      case _   ⇒ error(Array('\\', '"', '\'', 'b', 't', 'n', 'f', 'r', 'u', 'U')) // TODO: ESCAPE_SEQUENCE_CHARS
     }
   }
 

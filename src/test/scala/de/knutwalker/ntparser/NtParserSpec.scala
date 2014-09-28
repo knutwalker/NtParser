@@ -105,9 +105,9 @@ class NtParserSpec extends FunSuite {
   }
 
   test("parse weird things") {
-    val line = """<t%B2t\r> <""" + '\\' + """uFFFFy> <d> ."""
+    val line = """<t%B2t> <""" + '\\' + """uFFFFy> <d> ."""
     val statement = parse(line)
-    val bs = Array(116.toByte, -17.toByte, -65.toByte, -67.toByte, 116.toByte, 13.toByte)
+    val bs = Array(116.toByte, -17.toByte, -65.toByte, -67.toByte, 116.toByte)
     assert(statement.s == Resource(new String(bs)))
     assert(statement.p == Resource(new String(Array(65535.toChar, 'y'))))
     assert(statement.o == Resource("d"))
