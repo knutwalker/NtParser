@@ -19,55 +19,7 @@ package de.knutwalker.ntparser
 import com.hp.hpl.jena.rdf.model.{ Resource ⇒ JenaResource, _ }
 import com.hp.hpl.jena.util.FileManager
 import com.hp.hpl.jena.vocabulary.{ RDF, RDFS }
-import org.scalatest.FunSuite
-
-object implicits {
-
-  implicit final class ExtendedModel(val m: Model) extends AnyVal {
-    def s(p: Property, o: RDFNode): JenaResource =
-      m.listSubjectsWithProperty(p, o).nextResource()
-
-    def o(s: JenaResource, p: Property): RDFNode =
-      m.listObjectsOfProperty(s, p).nextNode()
-
-    def oo(s: JenaResource, p: Property): Option[RDFNode] = {
-      val nodes = m.listObjectsOfProperty(s, p)
-      if (nodes.hasNext)
-        Some(nodes.nextNode())
-      else
-        None
-    }
-
-    def list(s: JenaResource): Stream[JenaResource] =
-      if (s == RDF.nil)
-        Stream()
-      else
-        o(s, RDF.first).asResource() #:: list(o(s, RDF.rest).asResource())
-  }
-
-  implicit final class NSString(val s: String) extends AnyVal {
-    def :=(local: String): Property =
-      ResourceFactory.createProperty(s, local)
-
-    def :<(local: String): JenaResource =
-      ResourceFactory.createResource(s + local)
-  }
-
-}
-
-sealed trait Approval
-
-case object Approved extends Approval
-
-case object Proposed extends Approval
-
-sealed trait TestType
-
-case object Positive extends TestType
-
-case object Negative extends TestType
-
-case class TestCase(name: String, comment: String, file: String, testType: TestType, approval: Approval)
+import org.scalatest.{ Ignore, FunSuite }
 
 class W3CAutomaticSpec extends FunSuite {
   import de.knutwalker.ntparser.implicits._
@@ -111,41 +63,22 @@ class W3CAutomaticSpec extends FunSuite {
 
   val testCases = entries.flatMap(s ⇒ makeTestCase(s).toList.toStream)
 
-  def generateTests() = {
+  def generateTests(): Unit = {
     testCases foreach { testCase ⇒
-      test(s"${testCase.comment} (${testCase.name})") {
-        testCase.testType match {
-          case Positive ⇒
-            val statements = StrictNtParser(testCase.file).toList
-            println(s"statements = $statements")
-          case Negative ⇒
+      testCase.testType match {
+        case Positive ⇒
+          test(s"[AUTO] ${testCase.comment} (${testCase.name})") {
+            StrictNtParser(testCase.file).toList
+          }
+        case Negative ⇒
+          test(s"[AUTO] ${testCase.comment} (${testCase.name})") {
             intercept[ParseError] {
               StrictNtParser(testCase.file).toList
             }
-        }
+          }
       }
     }
   }
 
-  def printGeneratedTests() = {
-    val tests = testCases map { testCase ⇒
-      val header = s"""test("${testCase.comment.replaceAllLiterally("\\", "\\\\").replaceAllLiterally("\"", "\\\"")} (${testCase.name})")"""
-      val body = testCase.testType match {
-        case Positive ⇒
-          s"""val statements = StrictNtParser("${testCase.file}").toList
-           |  println("statements = " + statements)""".stripMargin
-        case Negative ⇒
-          s"""intercept[ParseError] {
-          |    StrictNtParser("${testCase.file}").toList
-          |  }""".stripMargin
-      }
-      s"""$header {
-         |  $body
-         |}
-         |""".stripMargin
-    }
-    tests foreach println
-  }
-
-  //  generateTests()
+  generateTests()
 }
