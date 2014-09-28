@@ -2,7 +2,7 @@ package de.knutwalker.ntparser
 
 import org.scalatest.FunSuite
 
-class W3CSpec extends FunSuite {
+class W3CTestSpec extends FunSuite {
 
   test("Empty file (nt-syntax-file-01)") {
     val statements = StrictNtParser("nt-syntax-file-01.nt").toList
