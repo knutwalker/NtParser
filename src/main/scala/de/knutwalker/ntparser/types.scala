@@ -12,8 +12,8 @@ case class Resource(uri: String) extends Node {
   override def toString: String = dataValue
 }
 
-case class Literal(value: String, lang: Option[String] = None, dt: Option[Resource] = None) extends Node {
-  private[this] final val dataValue = value
+case class Literal(lexical: String, lang: Option[String] = None, dt: Option[Resource] = None) extends Node {
+  private[this] final val dataValue = lexical
 
   private[this] lazy final val langValue = lang.fold("")("@" + _)
   private[this] lazy final val dtValue = dt.fold("")("^^" + _.n3)
