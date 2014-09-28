@@ -1,3 +1,7 @@
+Common.signedReleaseSettings
+
+sonatypeSettings
+
 startYear in ThisBuild := Some(2014)
 
 homepage in ThisBuild := Some(url("https://github.com/knutwalker/ntparser"))
@@ -27,4 +31,4 @@ publishTo in ThisBuild := {
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
-// SonatypeKeys.profileName in ThisBuild := "knutwalker"
+SonatypeKeys.profileName in ThisBuild := "knutwalker"
