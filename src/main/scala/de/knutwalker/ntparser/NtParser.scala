@@ -54,7 +54,6 @@ final class NtParser {
 
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String): Statement = {
-
     lineNo = -1
     if (line.isEmpty) null
     else {
@@ -79,7 +78,7 @@ final class NtParser {
       case '<' ⇒ TripleLine()
       case '_' ⇒ TripleLine()
       case '#' ⇒ // comment line
-      case END ⇒ // empty line
+      case '\u0000' ⇒ // empty line, inline char to allow switch statement
       case _   ⇒ error(LINE_BEGIN)
     }
 
