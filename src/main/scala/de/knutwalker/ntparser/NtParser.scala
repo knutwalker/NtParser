@@ -38,6 +38,7 @@ import scala.util.Try
  *         throw any [[ParseError]]s
  */
 final class NtParser {
+  import de.knutwalker.ntparser.NtParser._
 
   private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
 
@@ -205,17 +206,17 @@ final class NtParser {
   }
 
   private[this] def IriRef(): Resource = {
-    advance('<') || error('<')
+    mustAdvance('<')
     IriScheme()
-    IriRefCharacters() // captureWhile(IS_URI_CHAR)
-    advance('>') || error('>')
+    IriRefCharacters()
+    mustAdvance('>')
     ws()
     Resource(clear())
   }
 
   private[this] def NamedNode(): BNode = {
-    advance('_') || error('_')
-    advance(':') || error(':')
+    mustAdvance('_')
+    mustAdvance(':')
     val start = cursor
     // TODO: proper IS_NAME_CHAR according to http://www.w3.org/TR/2014/REC-n-triples-20140225/#grammar-production-BLANK_NODE_LABEL
     advance(IS_NAME_CHAR) || error("name identifier")
@@ -228,9 +229,9 @@ final class NtParser {
   }
 
   private[this] def LiteralNode(): Literal = {
-    advance('"') || error('"')
-    LiteralCharacters() // captureWhile(IS_LITERAL_CHAR)
-    advance('"') || error('"')
+    mustAdvance('"')
+    LiteralCharacters()
+    mustAdvance('"')
     val value = clear()
     val lit = (cursor: @switch) match {
       case '@' ⇒ LangLiteral(value)
@@ -242,8 +243,7 @@ final class NtParser {
   }
 
   @tailrec private[this] def IriScheme(): Unit = {
-    val IS_SCHEMA_CHAR = (c: Char) ⇒ c > 0x20 && c != ':' && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
-    captureWhile(IS_SCHEMA_CHAR) // TODO: static
+    captureWhile(IS_SCHEMA_CHAR)
     (cursor: @switch) match {
       case ':' ⇒ // scheme finish
       case '\\' ⇒
@@ -251,14 +251,13 @@ final class NtParser {
         IriScheme()
       case '%' ⇒
         PercentEscapedCharacter()
-        IriScheme() // TODO: what for n3 representation?
+        IriScheme()
       case _ ⇒ validationError(s"<${clear()}> is not absolute")
     }
   }
 
   @tailrec private[this] def IriRefCharacters(): Unit = {
-    val IS_IRIREF_CHAR = (c: Char) ⇒ c > 0x20 && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
-    captureWhile(IS_IRIREF_CHAR) // TODO: static
+    captureWhile(IS_IRIREF_CHAR)
     (cursor: @switch) match {
       case '>' ⇒ // iriref finish
       case '\\' ⇒
@@ -266,20 +265,19 @@ final class NtParser {
         IriRefCharacters()
       case '%' ⇒
         PercentEscapedCharacter()
-        IriRefCharacters() // TODO: what for n3 representation?
-      case _ ⇒ error(Array('>', '\\', '%')) // TODO: NORMAL_IRIREF_CHARS
+        IriRefCharacters()
+      case _ ⇒ error(IRIREF_CHARACTERS)
     }
   }
 
   @tailrec private[this] def LiteralCharacters(): Unit = {
-    val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
-    captureWhile(IS_LITERAL_CHAR) // TODO: static
+    captureWhile(IS_LITERAL_CHAR)
     (cursor: @switch) match {
       case '"' ⇒ //string finish
       case '\\' ⇒
         SlashEscapedCharacter()
         LiteralCharacters()
-      case _ ⇒ error(Array('"', '\\')) // TODO: NORMAL_LITERAL_CHARS
+      case _ ⇒ error(LITERAL_CHARACTERS)
     }
   }
 
@@ -289,7 +287,7 @@ final class NtParser {
   }
 
   private[this] def LangLiteral(value: String): Literal = {
-    advance('@') || error('@')
+    mustAdvance('@')
     captureWhile(IS_NAME_START)
     (cursor: @switch) match {
       case ' ' | '\t' ⇒ Literal.tagged(value, clear())
@@ -301,7 +299,7 @@ final class NtParser {
   }
 
   private[this] def ExtendedLangLiteral(value: String): Literal = {
-    advance('-') || error('-')
+    mustAdvance('-')
     append('-')
     captureWhile(IS_NAME_CHAR)
     (cursor: @switch) match {
@@ -313,16 +311,16 @@ final class NtParser {
   }
 
   private[this] def UnicodeEscapedCharacter(): Unit = {
-    advance('\\') || error('\\') // TODO: advance && error => mustAdvance
+    mustAdvance('\\')
     (cursor: @switch) match {
       case 'u' ⇒ Unicode()
       case 'U' ⇒ SuperUnicode()
-      case _   ⇒ error(Array('u', 'U')) // TODO: UNICODE_ESCAPE_SEQUENCE_CHARS
+      case _   ⇒ error(UNICODE_ESCAPE_CHARS)
     }
   }
 
   private[this] def SlashEscapedCharacter(): Unit = {
-    advance('\\') || error('\\') // TODO: advance && error => mustAdvance
+    mustAdvance('\\')
     (cursor: @switch) match {
       case '\\' ⇒
         append('\\')
@@ -350,12 +348,12 @@ final class NtParser {
         advance()
       case 'u' ⇒ Unicode()
       case 'U' ⇒ SuperUnicode()
-      case _   ⇒ error(Array('\\', '"', '\'', 'b', 't', 'n', 'f', 'r', 'u', 'U')) // TODO: ESCAPE_SEQUENCE_CHARS
+      case _   ⇒ error(SLASH_ESCAPE_CHARS)
     }
   }
 
   private[this] def Unicode(): Unit = {
-    advance('u') || error('u')
+    mustAdvance('u')
     append(captureUnicodeDigits())
   }
 
@@ -366,7 +364,7 @@ final class NtParser {
     captureHexDigit()).toChar
 
   private[this] def SuperUnicode(): Unit = {
-    advance('U') || error('U')
+    mustAdvance('U')
     append(captureSuperUnicodeDigits())
   }
 
@@ -391,7 +389,7 @@ final class NtParser {
     (c & 0x1f) + ((c >> 6) * 0x19) - 0x10
 
   private[this] def PercentEscapedCharacter(): Unit = {
-    advance('%') || error('%') // TODO: advance && error => mustAdvance
+    mustAdvance('%')
     append(percentEscaped0(0, new Array[Byte](1)))
   }
 
@@ -428,6 +426,9 @@ final class NtParser {
     ws()
     advance(c)
   }
+
+  private[this] def mustAdvance(c: Char): Boolean =
+    advance(c) || error(c)
 
   private[this] def advance(f: Char ⇒ Boolean): Boolean = {
     f(cursor) && advance()
@@ -546,18 +547,25 @@ final class NtParser {
     }
     else oldArray
   }
-
-  private[this] val END = Char.MinValue
-  private[this] val WHITESPACE = Array(' ', '\t')
-  private[this] val LINE_BEGIN = Array('<', '_', '#')
-  private[this] val SUBJECT_BEGIN = Array('<', '_')
-  private[this] val OBJECT_BEGIN = Array('<', '_', '"')
-  private[this] val IS_WHITESPACE = (c: Char) ⇒ c == ' ' || c == '\t'
-  private[this] val IS_NAME_START = (c: Char) ⇒ (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-  private[this] val IS_NAME_CHAR = (c: Char) ⇒ IS_NAME_START(c) || c >= '0' && c <= '9'
-  private[this] val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 }
-
+object NtParser {
+  private final val END = Char.MinValue
+  private final val WHITESPACE = Array(' ', '\t')
+  private final val LINE_BEGIN = Array('<', '_', '#')
+  private final val SUBJECT_BEGIN = Array('<', '_')
+  private final val OBJECT_BEGIN = Array('<', '_', '"')
+  private final val IRIREF_CHARACTERS = Array('>', '\\', '%')
+  private final val LITERAL_CHARACTERS = Array('"', '\\')
+  private final val UNICODE_ESCAPE_CHARS = Array('u', 'U')
+  private final val SLASH_ESCAPE_CHARS = Array('\\', '"', '\'', 'b', 't', 'n', 'f', 'r', 'u', 'U')
+  private final val IS_WHITESPACE = (c: Char) ⇒ c == ' ' || c == '\t'
+  private final val IS_NAME_START = (c: Char) ⇒ (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+  private final val IS_NAME_CHAR = (c: Char) ⇒ IS_NAME_START(c) || c >= '0' && c <= '9'
+  private final val IS_HEX_CHAR = (c: Char) ⇒ (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+  private final val IS_SCHEMA_CHAR = (c: Char) ⇒ c > 0x20 && c != ':' && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
+  private final val IS_IRIREF_CHAR = (c: Char) ⇒ c > 0x20 && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
+  private final val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
+}
 private[ntparser] trait NtParserCompanion {
   /**
    * Parse a file or resource, assuming UTF-8.
