@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.knutwalker.ntparser
+package de.knutwalker.ntparser.model
 
 sealed trait Node {
   def n3: String
@@ -72,3 +72,5 @@ object Statement {
 }
 
 case class Triple(override val s: Node, override val p: Resource, override val o: Node) extends Statement(s, p, o)
+
+

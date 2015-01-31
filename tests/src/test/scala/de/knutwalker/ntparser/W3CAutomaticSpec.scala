@@ -16,10 +16,13 @@
 
 package de.knutwalker.ntparser
 
+import de.knutwalker.ntparser.model.ntModel
+
 import com.hp.hpl.jena.rdf.model.{ Resource ⇒ JenaResource, _ }
 import com.hp.hpl.jena.util.FileManager
 import com.hp.hpl.jena.vocabulary.{ RDF, RDFS }
-import org.scalatest.{ Ignore, FunSuite }
+
+import org.scalatest.FunSuite
 
 class W3CAutomaticSpec extends FunSuite {
   import de.knutwalker.ntparser.implicits._

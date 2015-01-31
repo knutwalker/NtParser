@@ -33,11 +33,22 @@ object NtParserBuild extends Build {
   lazy val core =
     Project("core", file("core")).settings(ntparserSettings: _*)
 
+  lazy val model =
+    Project("model", file("models") / "nt").settings(ntparserSettings: _*)
+      .dependsOn(core)
+
+  lazy val jena =
+    Project("jena", file("models") / "jena").settings(ntparserSettings: _*)
+      .dependsOn(core)
+
   lazy val tests =
-    Project("tests", file("tests")).settings(noPublishSettings: _*).dependsOn(core)
+    Project("tests", file("tests")).settings(noPublishSettings: _*)
+      .dependsOn(core, model, jena)
 
   lazy val parent =
-    Project("parent", file(".")).settings(noPublishSettings: _*).aggregate(core, tests).dependsOn(core, tests)
+    Project("parent", file(".")).settings(noPublishSettings: _*)
+      .aggregate(core, model, jena, tests)
+      .dependsOn(core, model, jena, tests)
 
   lazy val ntparserSettings = signedReleaseSettings ++ sonatypeSettings
 

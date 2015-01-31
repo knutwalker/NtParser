@@ -16,7 +16,7 @@
 
 package de.knutwalker.ntparser
 
-import de.knutwalker.ntparser.{ Resource ⇒ ccResource, Literal ⇒ ccLiteral, BNode ⇒ ccBNode, Triple ⇒ ccTriple, Node ⇒ ccNode }
+import de.knutwalker.ntparser.model.{BNode ⇒ ccBNode, Resource ⇒ ccResource, Literal ⇒ ccLiteral, Node ⇒ ccNode, Triple ⇒ ccTriple}
 import org.scalacheck.Gen
 import org.apache.commons.lang3.StringEscapeUtils
 

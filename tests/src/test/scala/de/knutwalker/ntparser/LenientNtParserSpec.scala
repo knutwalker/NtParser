@@ -16,6 +16,8 @@
 
 package de.knutwalker.ntparser
 
+import de.knutwalker.ntparser.model.{BNode, Resource, Literal, ntModel}
+
 import org.scalatest.FunSuite
 
 class LenientNtParserSpec extends FunSuite {

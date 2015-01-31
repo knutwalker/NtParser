@@ -16,6 +16,8 @@
 
 package de.knutwalker.ntparser
 
+import de.knutwalker.ntparser.model.{Statement, ntModel}
+
 import org.scalatest.{ Matchers, FlatSpec }
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.{ Gen, Shrink }

@@ -86,15 +86,3 @@ trait StatementFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
    */
   def statement(s: S, p: P, o: O): T
 }
-object StatementFactory {
-  implicit val Default: StatementFactory[Node, Resource, Node, Statement] = new StatementFactory[Node, Resource, Node, Statement] {
-    def reset(): Unit = ()
-    def iriRef(uri: String): Node = Resource(uri)
-    def blankNode(id: String): Node = BNode(id)
-    def predicate(uri: String): Resource = Resource(uri)
-    def literal(lexical: String): Node = Literal.simple(lexical)
-    def taggedLiteral(lexical: String, lang: String): Node =Literal.tagged(lexical, lang)
-    def typedLiteral(lexical: String, dt: String): Node = Literal.typed(lexical, Resource(dt))
-    def statement(s: Node, p: Resource, o: Node): Statement = Triple(s, p, o)
-  }
-}
