@@ -18,8 +18,6 @@ scalacOptions in ThisBuild ++= List(
   "-Xfatal-warnings",
   "-Xfuture",
   "-Xlint",
-  "-Xlint:_",
-  "-Xverify",
   "-Yclosure-elim",
   "-Ydead-code",
   "-Yinline",
@@ -29,12 +27,9 @@ scalacOptions in ThisBuild ++= List(
   "-Yno-predef",
   "-Ywarn-adapted-args",
   "-Ywarn-inaccessible",
-  "-Ywarn-infer-any",
   "-Ywarn-nullary-override",
   "-Ywarn-nullary-unit",
-  "-Ywarn-numeric-widen",
-  "-Ywarn-unused",
-  "-Ywarn-unused-import"
+  "-Ywarn-numeric-widen"
 )
 
 publishMavenStyle in ThisBuild := true
