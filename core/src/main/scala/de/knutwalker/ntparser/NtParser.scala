@@ -22,7 +22,6 @@ import scala.Predef.{assert, classOf}
 import scala.annotation.{switch, tailrec}
 import scala.collection.GenIterable
 import scala.collection.JavaConverters.{asJavaIteratorConverter, asScalaIteratorConverter}
-import scala.collection.mutable.ListBuffer
 import scala.io.Codec
 import scala.util.Try
 import java.io.InputStream
@@ -37,11 +36,16 @@ import java.util.{Iterator ⇒ JIterator}
  * @define swallowsErrors
  *         This methods will swallow parse errors and not
  *         throw any [[ParseError]]s
+ *
+ * @tparam S The type for a subject node
+ * @tparam P The type for a predicate node
+ * @tparam O The type for a object node
+ * @tparam T The type for a triple or statement of (subject, predicate, object)
  */
-abstract class NtParser {
+abstract class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]) {
   import de.knutwalker.ntparser.NtParser._
 
-  private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
+  private[this] val logger = LoggerFactory.getLogger(classOf[NtParser[S, P, O, T]])
 
   private[this] var input: Array[Char] = new Array[Char](8192)
 
@@ -51,94 +55,93 @@ abstract class NtParser {
   private[this] var lineNo = -1
 
   private[this] val sb = new StringBuilder
-  private[this] val nodes: ListBuffer[Node] = ListBuffer.empty
-  private[this] var parsedSubject: Node = _
-  private[this] var parsedPredicate: Resource = _
-  private[this] var parsedObject: Node = _
+  private[this] var parsedSubject: S = _
+  private[this] var parsedPredicate: P = _
+  private[this] var parsedObject: O = _
 
   /**
-   * Parse a single line into a [[Statement]].
+   * Parse a single line into a [[T]].
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
-  final def parseOpt(line: String): Option[Statement] = Option(parseOrNull(line))
+  final def parseOpt(line: String): Option[T] = Option(parseOrNull(line))
 
   /**
-   * Parse a single line into a [[Statement]] that is
+   * Parse a single line into a [[T]] that is
    * part of a bigger file at some location.
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @param lineNumber The current line number
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
-  final def parseOpt(line: String, lineNumber: Int): Option[Statement] = Option(parseOrNull(line, lineNumber))
+  final def parseOpt(line: String, lineNumber: Int): Option[T] = Option(parseOrNull(line, lineNumber))
 
   /**
-   * Parse a single line into a [[Statement]].
+   * Parse a single line into a [[T]].
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
-  final def parseTry(line: String): Try[Option[Statement]] = Try(Option(parse(line)))
+  final def parseTry(line: String): Try[Option[T]] = Try(Option(parse(line)))
 
   /**
-   * Parse a single line into a [[Statement]] that is
+   * Parse a single line into a [[T]] that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @param lineNumber The current line number
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
-  final def parseTry(line: String, lineNumber: Int): Try[Option[Statement]] = Try(Option(parse(line, lineNumber)))
+  final def parseTry(line: String, lineNumber: Int): Try[Option[T]] = Try(Option(parse(line, lineNumber)))
 
   /**
-   * Parse a single line into a [[Statement]].
+   * Parse a single line into a [[T]].
    *
-   * @param line A string that may contain one [[Statement]]
-   * @return The [[Statement]] if it could be parsed, or null otherwise
+   * @param line A string that may contain one [[T]]
+   * @return The [[T]] if it could be parsed, or null otherwise
    */
-  final def parseOrNull(line: String): Statement = {
+  final def parseOrNull(line: String): T = {
     try parse(line) catch {
       case pe: ParseError ⇒
         logger.warn(pe.getMessage, pe)
-        null
+        null.asInstanceOf[T]
     }
   }
 
   /**
-   * Parse a single line into a [[Statement]] that is
+   * Parse a single line into a [[T]] that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @param lineNumber The current line number
-   * @return The [[Statement]] if it could be parsed, or null otherwise
+   * @return The [[T]] if it could be parsed, or null otherwise
    */
-  final def parseOrNull(line: String, lineNumber: Int): Statement = {
+  final def parseOrNull(line: String, lineNumber: Int): T = {
     try parse(line, lineNo) catch {
       case pe: ParseError ⇒
         logger.warn(pe.getMessage, pe)
-        null
+        null.asInstanceOf[T]
     }
   }
 
   /**
-   * Parse a single line into a [[Statement]].
+   * Parse a single line into a [[T]].
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @throws ParseError if a line could not be parsed
-   * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
+   * @return The [[T]] if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
-  final def parse(line: String): Statement = {
+  final def parse(line: String): T = {
     lineNo = -1
-    if (line.isEmpty) null
+    if (line.isEmpty) null.asInstanceOf[T]
     else {
       reset(line)
       Line()
@@ -146,25 +149,25 @@ abstract class NtParser {
   }
 
   /**
-   * Parse a single line into a [[Statement]] that is
+   * Parse a single line into a [[T]] that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[Statement]]
+   * @param line A string that may contain one [[T]]
    * @param lineNumber The current line number
    * @throws ParseError if a line could not be parsed
-   * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
+   * @return The [[T]] if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
-  final def parse(line: String, lineNumber: Int): Statement = {
+  final def parse(line: String, lineNumber: Int): T = {
     lineNo = lineNumber
-    if (line.isEmpty) null
+    if (line.isEmpty) null.asInstanceOf[T]
     else {
       reset(line)
       Line()
     }
   }
 
-  private[this] def Line(): Statement = {
+  private[this] def Line(): T = {
     ws()
     (cursor: @switch) match {
       case '<'      ⇒ TripleLine()
@@ -175,9 +178,9 @@ abstract class NtParser {
     }
 
     if ((parsedSubject ne null) && (parsedPredicate ne null) && (parsedObject ne null)) {
-      Triple(parsedSubject, parsedPredicate, parsedObject)
+      factory.statement(parsedSubject, parsedPredicate, parsedObject)
     }
-    else null
+    else null.asInstanceOf[T]
   }
 
   private[this] def TripleLine(): Boolean = {
@@ -196,7 +199,7 @@ abstract class NtParser {
   }
 
   private[this] def Predicate(): Unit = {
-    parsedPredicate = IriRef()
+    parsedPredicate = factory.predicate(IriRefUri())
   }
 
   private[this] def Object(): Unit = {
@@ -208,16 +211,24 @@ abstract class NtParser {
     }
   }
 
-  private[this] def IriRef(): Resource = {
+  private[this] def IriRef(): S = {
+    factory.iriRef(IriRefUri())
+  }
+
+  private[this] def IriRefUri(): String = {
     mustAdvance('<')
     IriScheme()
     IriRefCharacters()
     mustAdvance('>')
     ws()
-    Resource(clear())
+    clear()
   }
 
-  private[this] def NamedNode(): BNode = {
+  private[this] def NamedNode(): S = {
+    factory.blankNode(NamedNodeId())
+  }
+
+  private[this] def NamedNodeId(): String = {
     mustAdvance('_')
     mustAdvance(':')
     val start = cursor
@@ -228,31 +239,31 @@ abstract class NtParser {
     // TODO, maybe advance?
     ws() || error(WHITESPACE)
     ws()
-    BNode(clear())
+    clear()
   }
 
-  protected def LiteralNode(): Literal
+  protected def LiteralNode(): O
 
-  protected final def ShortLiteralNode(): Literal = {
+  protected final def ShortLiteralNode(): O = {
     mustAdvance('"')
     ShortLiteralCharacters()
     mustAdvance('"')
     finishLiteral()
   }
 
-  protected final def LongLiteralNode(): Literal = {
+  protected final def LongLiteralNode(): O = {
     mustAdvance("\"\"\"")
     LongLiteralCharacters()
     mustAdvance("\"\"\"")
     finishLiteral()
   }
 
-  private[this] def finishLiteral(): Literal = {
+  private[this] def finishLiteral(): O = {
     val value = clear()
     val lit = (cursor: @switch) match {
       case '@' ⇒ LangLiteral(value)
       case '^' ⇒ TypedLiteral(value)
-      case _   ⇒ Literal.simple(value)
+      case _   ⇒ factory.literal(value)
     }
     ws()
     lit
@@ -313,32 +324,28 @@ abstract class NtParser {
     }
   }
 
-  private[this] def TypedLiteral(value: String) = {
+  private[this] def TypedLiteral(value: String): O = {
     advance("^^") || error('^')
-    Literal.typed(value, IriRef())
+    factory.typedLiteral(value, IriRefUri())
   }
 
-  private[this] def LangLiteral(value: String): Literal = {
+  private[this] def LangLiteral(value: String): O = {
     mustAdvance('@')
     captureWhile(IS_NAME_START)
     (cursor: @switch) match {
-      case ' ' | '\t' ⇒ Literal.tagged(value, clear())
+      case ' ' | '\t' ⇒ factory.taggedLiteral(value, clear())
       case '-'        ⇒ ExtendedLangLiteral(value)
-      case _ ⇒
-        error("language tag identifier")
-        null
+      case _          ⇒ error("language tag identifier")
     }
   }
 
-  private[this] def ExtendedLangLiteral(value: String): Literal = {
+  private[this] def ExtendedLangLiteral(value: String): O = {
     mustAdvance('-')
     append('-')
     captureWhile(IS_NAME_CHAR)
     (cursor: @switch) match {
-      case ' ' | '\t' ⇒ Literal.tagged(value, clear())
-      case _ ⇒
-        error("language tag identifier")
-        null
+      case ' ' | '\t' ⇒ factory.taggedLiteral(value, clear())
+      case _          ⇒ error("language tag identifier")
     }
   }
 
@@ -554,11 +561,10 @@ abstract class NtParser {
   }
 
   private[this] def reset(forLine: String): Unit = {
-    parsedSubject = null
-    parsedPredicate = null
-    parsedObject = null
+    parsedSubject = null.asInstanceOf[S]
+    parsedPredicate = null.asInstanceOf[P]
+    parsedObject = null.asInstanceOf[O]
 
-    nodes.clear()
     sb setLength 0
 
     pos = 0
@@ -628,15 +634,17 @@ object NtParser {
   private final val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
   private final val IS_LONG_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\'
 
-  def strict: NtParser = new StrictParser
-  def lenient: NtParser = new LenientParser
+  def strict[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]): NtParser[S, P, O, T] =
+    new StrictParser[S, P, O, T]
+  def lenient[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]): NtParser[S, P, O, T] =
+    new LenientParser[S, P, O, T]
 
-  private final class StrictParser extends NtParser {
-    protected def LiteralNode(): Literal = ShortLiteralNode()
+  private final class StrictParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]) extends NtParser[S, P, O, T] {
+    protected def LiteralNode(): O = ShortLiteralNode()
   }
 
-  private final class LenientParser extends NtParser {
-    protected def LiteralNode(): Literal = {
+  private final class LenientParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]) extends NtParser[S, P, O, T] {
+    protected def LiteralNode(): O = {
       if (peek == '"' && peekpeek == '"') LongLiteralNode()
       else ShortLiteralNode()
     }
@@ -647,9 +655,9 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file or resource, assuming UTF-8.
    *
    * @param fileName The name of a nt file or resource
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(fileName: String): Iterator[Statement] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     apply(fileName, Codec.UTF8)
 
   /**
@@ -657,18 +665,18 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param fileName The name of a nt file or resource
    * @param codec The codec that will be used to open the file
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(fileName: String, codec: Codec): Iterator[Statement] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, codec: Codec)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(fileName, codec))
 
   /**
    * Parse lines from an InputStream, assuming UTF-8.
    *
    * @param is the InputStream
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(is: InputStream): Iterator[Statement] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     apply(is, Codec.UTF8)
 
   /**
@@ -676,84 +684,84 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param is the InputStream
    * @param codec The codec that will be used to read the stream
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(is: InputStream, codec: Codec): Iterator[Statement] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, codec: Codec)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(is, codec))
 
   /**
    * Parse lines from an Iterable of Strings.
    *
    * @param lines An Iterable of all lines of an nt document
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(lines: GenIterable[String]): Iterator[Statement] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: GenIterable[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     apply(lines.iterator)
 
   /**
    * Parse lines from an Iterator of Strings.
    *
    * @param lines An Iterator of all lines of an nt document
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def apply(lines: Iterator[String]): Iterator[Statement] =
-    parsingIterator(lines)
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+    runParser(lines)
 
   /**
    * Parse a file or resource, assuming UTF-8.
    *
    * @param fileName The name of a nt file or resource
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(fileName: String): JIterator[Statement] =
-    apply(fileName).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(fileName)(factory).asJava
 
   /**
    * Parse a file or resource in the given codec.
    *
    * @param fileName The name of a nt file or resource
    * @param encoding The encoding that will be used to open the file
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(fileName: String, encoding: Charset): JIterator[Statement] =
-    apply(fileName, Codec.charset2codec(encoding)).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(fileName, Codec.charset2codec(encoding))(factory).asJava
 
   /**
    * Parse lines from an InputStream, assuming UTF-8.
    *
    * @param is the InputStream
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(is: InputStream): JIterator[Statement] =
-    apply(is).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(is)(factory).asJava
 
   /**
    * Parse lines from an InputStream in the given coded.
    *
    * @param is the InputStream
    * @param encoding The encoding that will be used to read the stream
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(is: InputStream, encoding: Charset): JIterator[Statement] =
-    apply(is, Codec.charset2codec(encoding)).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(is, Codec.charset2codec(encoding))(factory).asJava
 
   /**
    * Parse lines from an Iterable of Strings.
    *
    * @param lines An Iterable of all lines of an nt document
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(lines: JIterable[String]): JIterator[Statement] =
-    apply(lines.iterator().asScala).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterable[String], factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(lines.iterator().asScala)(factory).asJava
 
   /**
    * Parse lines from an Iterator of Strings.
    *
    * @param lines An Iterator of all lines of an nt document
-   * @return An Iterator of all [[Statement]]s
+   * @return An Iterator of all [[T]]s
    */
-  final def parse(lines: JIterator[String]): JIterator[Statement] =
-    apply(lines.asScala).asJava
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterator[String], factory: StatementFactory[S, P, O, T]): JIterator[T] =
+    apply(lines.asScala)(factory).asJava
 
   /**
    * Closes all opened InputStreams.
@@ -763,7 +771,12 @@ private[ntparser] trait NtParserCompanion {
   final def close(): Unit =
     Loader.shutdown()
 
-  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement]
+  private def runParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] = {
+    factory.reset()
+    parsingIterator(lines)
+  }
+
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T]
 }
 
 /**
@@ -771,24 +784,24 @@ private[ntparser] trait NtParserCompanion {
  */
 object StrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement] =
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     new ParsingIterator(NtParser.strict, lines)
 
-  private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
-    private var nextStatement: Statement = _
+  private class ParsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](p: NtParser[S, P, O, T], underlying: Iterator[String]) extends Iterator[T] {
+    private var nextStatement: T = _
     private var currentLineNo = 0
 
     def hasNext: Boolean = nextStatement ne null
 
-    def next(): Statement = {
+    def next(): T = {
       if (nextStatement eq null) Iterator.empty.next()
       advance()
     }
 
     advance()
 
-    @tailrec private def advance0(): Statement = {
-      if (!underlying.hasNext) null
+    @tailrec private def advance0(): T = {
+      if (!underlying.hasNext) null.asInstanceOf[T]
       else {
         currentLineNo += 1
         val nextStatement = p.parse(underlying.next(), currentLineNo)
@@ -797,7 +810,7 @@ object StrictNtParser extends NtParserCompanion {
       }
     }
 
-    private def advance(): Statement = {
+    private def advance(): T = {
       val before = nextStatement
       nextStatement = advance0()
       before
@@ -810,24 +823,24 @@ object StrictNtParser extends NtParserCompanion {
  */
 object NonStrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement] =
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
     new ParsingIterator(NtParser.lenient, lines)
 
-  private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
-    private var nextStatement: Statement = _
+  private class ParsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](p: NtParser[S, P, O, T], underlying: Iterator[String]) extends Iterator[T] {
+    private var nextStatement: T = _
     private var currentLineNo = 0
 
     def hasNext: Boolean = nextStatement ne null
 
-    def next(): Statement = {
+    def next(): T = {
       if (nextStatement eq null) Iterator.empty.next()
       advance()
     }
 
     advance()
 
-    @tailrec private def advance0(): Statement = {
-      if (!underlying.hasNext) null
+    @tailrec private def advance0(): T = {
+      if (!underlying.hasNext) null.asInstanceOf[T]
       else {
         currentLineNo += 1
         val line = p.parseOrNull(underlying.next(), currentLineNo)
@@ -836,7 +849,7 @@ object NonStrictNtParser extends NtParserCompanion {
       }
     }
 
-    private def advance(): Statement = {
+    private def advance(): T = {
       val before = nextStatement
       nextStatement = advance0()
       before
