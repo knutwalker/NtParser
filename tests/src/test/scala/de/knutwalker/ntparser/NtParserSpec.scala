@@ -130,7 +130,7 @@ class NtParserSpec extends FunSuite {
   }
 
   private def parse(line: String) = {
-    val parser = new NtParser
+    val parser = NtParser.strict
     parser.parse(line)
   }
 }

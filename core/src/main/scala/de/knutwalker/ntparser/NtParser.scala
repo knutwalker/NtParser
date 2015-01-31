@@ -38,7 +38,7 @@ import java.util.{Iterator ⇒ JIterator}
  *         This methods will swallow parse errors and not
  *         throw any [[ParseError]]s
  */
-final class NtParser {
+abstract class NtParser {
   import de.knutwalker.ntparser.NtParser._
 
   private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
@@ -62,7 +62,7 @@ final class NtParser {
    * @param line A string that may contain one [[Statement]]
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
-  def parseOpt(line: String): Option[Statement] = Option(parseOrNull(line))
+  final def parseOpt(line: String): Option[Statement] = Option(parseOrNull(line))
 
   /**
    * Parse a single line into a [[Statement]] that is
@@ -74,7 +74,7 @@ final class NtParser {
    * @param lineNumber The current line number
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
-  def parseOpt(line: String, lineNumber: Int): Option[Statement] = Option(parseOrNull(line, lineNumber))
+  final def parseOpt(line: String, lineNumber: Int): Option[Statement] = Option(parseOrNull(line, lineNumber))
 
   /**
    * Parse a single line into a [[Statement]].
@@ -84,7 +84,7 @@ final class NtParser {
    * @param line A string that may contain one [[Statement]]
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
-  def parseTry(line: String): Try[Option[Statement]] = Try(Option(parse(line)))
+  final def parseTry(line: String): Try[Option[Statement]] = Try(Option(parse(line)))
 
   /**
    * Parse a single line into a [[Statement]] that is
@@ -94,7 +94,7 @@ final class NtParser {
    * @param lineNumber The current line number
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
-  def parseTry(line: String, lineNumber: Int): Try[Option[Statement]] = Try(Option(parse(line, lineNumber)))
+  final def parseTry(line: String, lineNumber: Int): Try[Option[Statement]] = Try(Option(parse(line, lineNumber)))
 
   /**
    * Parse a single line into a [[Statement]].
@@ -102,7 +102,7 @@ final class NtParser {
    * @param line A string that may contain one [[Statement]]
    * @return The [[Statement]] if it could be parsed, or null otherwise
    */
-  def parseOrNull(line: String): Statement = {
+  final def parseOrNull(line: String): Statement = {
     try parse(line) catch {
       case pe: ParseError ⇒
         logger.warn(pe.getMessage, pe)
@@ -118,7 +118,7 @@ final class NtParser {
    * @param lineNumber The current line number
    * @return The [[Statement]] if it could be parsed, or null otherwise
    */
-  def parseOrNull(line: String, lineNumber: Int): Statement = {
+  final def parseOrNull(line: String, lineNumber: Int): Statement = {
     try parse(line, lineNo) catch {
       case pe: ParseError ⇒
         logger.warn(pe.getMessage, pe)
@@ -134,7 +134,7 @@ final class NtParser {
    * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
-  def parse(line: String): Statement = {
+  final def parse(line: String): Statement = {
     lineNo = -1
     if (line.isEmpty) null
     else {
@@ -153,7 +153,7 @@ final class NtParser {
    * @return The [[Statement]] if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
-  def parse(line: String, lineNumber: Int): Statement = {
+  final def parse(line: String, lineNumber: Int): Statement = {
     lineNo = lineNumber
     if (line.isEmpty) null
     else {
@@ -229,10 +229,23 @@ final class NtParser {
     BNode(clear())
   }
 
-  private[this] def LiteralNode(): Literal = {
+  protected def LiteralNode(): Literal
+
+  protected final def ShortLiteralNode(): Literal = {
     mustAdvance('"')
-    LiteralCharacters()
+    ShortLiteralCharacters()
     mustAdvance('"')
+    finishLiteral()
+  }
+
+  protected final def LongLiteralNode(): Literal = {
+    mustAdvance("\"\"\"")
+    LongLiteralCharacters()
+    mustAdvance("\"\"\"")
+    finishLiteral()
+  }
+
+  private[this] def finishLiteral(): Literal = {
     val value = clear()
     val lit = (cursor: @switch) match {
       case '@' ⇒ LangLiteral(value)
@@ -271,13 +284,29 @@ final class NtParser {
     }
   }
 
-  @tailrec private[this] def LiteralCharacters(): Unit = {
+  @tailrec private[this] def ShortLiteralCharacters(): Unit = {
     captureWhile(IS_LITERAL_CHAR)
     (cursor: @switch) match {
       case '"' ⇒ //string finish
       case '\\' ⇒
         SlashEscapedCharacter()
-        LiteralCharacters()
+        ShortLiteralCharacters()
+      case _ ⇒ error(LITERAL_CHARACTERS)
+    }
+  }
+
+  @tailrec private[this] def LongLiteralCharacters(): Unit = {
+    captureWhile(IS_LONG_LITERAL_CHAR)
+    (cursor: @switch) match {
+      case '"' ⇒ // string might be finished
+        if ((peek != '"') || (peekpeek != '"')) {
+          append('"')
+          advance()
+          LongLiteralCharacters()
+        }
+      case '\\' ⇒
+        SlashEscapedCharacter()
+        LongLiteralCharacters()
       case _ ⇒ error(LITERAL_CHARACTERS)
     }
   }
@@ -418,7 +447,7 @@ final class NtParser {
     advance(f) && capture0(f)
   }
 
-  @tailrec private[this] def ws(): Boolean = {
+  @tailrec private[this] final def ws(): Boolean = {
     if (IS_WHITESPACE(cursor)) advance() && ws()
     else true
   }
@@ -431,6 +460,9 @@ final class NtParser {
   @inline private[this] def mustAdvance(c: Char): Boolean =
     advance(c) || error(c)
 
+  @inline private[this] def mustAdvance(s: String): Boolean =
+    advance(s) || error(s)
+
   @inline private[this] def advance(f: Char ⇒ Boolean): Boolean = {
     f(cursor) && advance()
   }
@@ -440,7 +472,7 @@ final class NtParser {
   }
 
   @tailrec
-  private[this] def _advance(s: String, i: Int, l: Int): Boolean = {
+  private[this] final def _advance(s: String, i: Int, l: Int): Boolean = {
     (i == l) || (advance(s.charAt(i)) && _advance(s, i + 1, l))
   }
 
@@ -457,6 +489,16 @@ final class NtParser {
       true
     }
     else false
+  }
+
+  @inline protected final def peek: Char = {
+    val nextPos = pos + 1
+    if (nextPos >= max) END else input(nextPos)
+  }
+
+  @inline protected final def peekpeek: Char = {
+    val nextPos = pos + 2
+    if (nextPos >= max) END else input(nextPos)
   }
 
   @inline private[this] def error(c: Char): Nothing = {
@@ -582,6 +624,21 @@ object NtParser {
   private final val IS_SCHEMA_CHAR = (c: Char) ⇒ c > 0x20 && c != ':' && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
   private final val IS_IRIREF_CHAR = (c: Char) ⇒ c > 0x20 && c != '>' && c != '"' && c != '{' && c != '}' && c != '<' && c != '\\' && c != '%'
   private final val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
+  private final val IS_LONG_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\'
+
+  def strict: NtParser = new StrictParser
+  def lenient: NtParser = new LenientParser
+
+  private final class StrictParser extends NtParser {
+    protected def LiteralNode(): Literal = ShortLiteralNode()
+  }
+
+  private final class LenientParser extends NtParser {
+    protected def LiteralNode(): Literal = {
+      if (peek == '"' && peekpeek == '"') LongLiteralNode()
+      else ShortLiteralNode()
+    }
+  }
 }
 private[ntparser] trait NtParserCompanion {
   /**
@@ -638,7 +695,7 @@ private[ntparser] trait NtParserCompanion {
    * @return An Iterator of all [[Statement]]s
    */
   final def apply(lines: Iterator[String]): Iterator[Statement] =
-    parsingIterator(new NtParser, lines)
+    parsingIterator(lines)
 
   /**
    * Parse a file or resource, assuming UTF-8.
@@ -704,7 +761,7 @@ private[ntparser] trait NtParserCompanion {
   final def close(): Unit =
     Loader.shutdown()
 
-  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement]
+  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement]
 }
 
 /**
@@ -712,8 +769,8 @@ private[ntparser] trait NtParserCompanion {
  */
 object StrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
-    new ParsingIterator(parser, lines)
+  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement] =
+    new ParsingIterator(NtParser.strict, lines)
 
   private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
     private var nextStatement: Statement = _
@@ -751,8 +808,8 @@ object StrictNtParser extends NtParserCompanion {
  */
 object NonStrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator(parser: NtParser, lines: Iterator[String]): Iterator[Statement] =
-    new ParsingIterator(parser, lines)
+  protected def parsingIterator(lines: Iterator[String]): Iterator[Statement] =
+    new ParsingIterator(NtParser.lenient, lines)
 
   private class ParsingIterator(p: NtParser, underlying: Iterator[String]) extends Iterator[Statement] {
     private var nextStatement: Statement = _

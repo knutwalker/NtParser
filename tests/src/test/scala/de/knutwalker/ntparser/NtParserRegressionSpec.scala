@@ -29,7 +29,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
 
     forAllNoShrink(NtGen.ValidTriple -> "triple", MinSuccessful(200), MaxSize(500)) {
       case (line, expected) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         parser.parse(line) shouldBe expected
     }
   }
@@ -38,7 +38,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
 
     forAllNoShrink(NtGen.InvalidPredicate -> "triple") {
       case (line, (atPos, wrongChar)) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         val expected = s"parse error at char $atPos, expected [<], but found [$wrongChar]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
@@ -51,7 +51,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
 
     forAllNoShrink(NtGen.InvalidSubject -> "triple") {
       case (line, _) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         val expected = s"parse error at char 1, expected [<, _, or #], but found [${'"'}]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
@@ -63,7 +63,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
 
     forAllNoShrink(NtGen.MissingDot -> "triple") {
       case (line, atPos) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         val expected = s"parse error at char $atPos, expected [.], but found [EOI]"
 
         val thrown = the[ParseError] thrownBy parser.parse(line)
@@ -77,11 +77,11 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
     val singleInstance = new ListBuffer[Statement]
     val newInstance = new ListBuffer[Statement]
 
-    val singleParser = new NtParser
+    val singleParser = NtParser.strict
 
     forAllNoShrink(NtGen.ValidTriple -> "triple", MinSuccessful(200), MaxSize(500)) {
       case (line, expected) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         newInstance += parser.parse(line)
         singleInstance += singleParser.parse(line)
         expecteds += expected
@@ -99,7 +99,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
 
     forAllNoShrink(NtGen.WithWhiteSpace -> "triple", MinSuccessful(200), MaxSize(500)) {
       case (line, expected) =>
-        val parser = new NtParser
+        val parser = NtParser.strict
         parser.parse(line) shouldBe expected
     }
   }
@@ -107,7 +107,7 @@ class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks 
   it should "ignore comment lines" in {
 
     forAllNoShrink(NtGen.CommentLine -> "triple", MinSuccessful(200), MaxSize(500)) { line =>
-      val parser = new NtParser
+      val parser = NtParser.strict
       parser.parse(line) shouldBe null
     }
   }

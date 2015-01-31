@@ -69,10 +69,13 @@ The `Iterable` and `Iterator` should represent single lines, that is, at-most on
 The `StrictNtParser` will halt with an Exception at the first parse error.
 The `NonStrictNtParser` will just log exceptions and continue parsing.
 
-As an alternative, you can instantiate a `new de.knutwalker.ntparser.NtParser`.
+As an alternative, you can instantiate an `de.knutwalker.ntparser.NtParser` directly.
 The `NtParser` has several `parse*` methods, that each take a String and assume,
 that this is _one_ line of some bigger document and that is correctly delimited.
 One invocation of any `parse*` method will parse at-most _one_ statement.
+There are two flavours, `NtParser.strict` and `NtParser.lenient`. The lenient one
+supports grammar features, that are not officially specified, such as long quotes
+from Turtle.
 
 
 ## Specification conformity
