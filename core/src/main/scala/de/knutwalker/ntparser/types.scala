@@ -33,7 +33,7 @@ case class Literal(lexical: String, lang: Option[String], dt: Resource) extends 
 
   private[this] lazy final val langValue = lang.fold("")("@" + _)
   private[this] lazy final val dtValue = "^^" + dt.n3
-  private[this] lazy final val stringValue = s""""$dataValue"${langValue}$dtValue"""
+  private[this] lazy final val stringValue = s""""$dataValue"$langValue$dtValue"""
 
   lazy final val n3 = stringValue
 
@@ -62,7 +62,7 @@ case class BNode(nodeId: String) extends Node {
 }
 
 sealed abstract class Statement(val s: Node, val p: Resource, val o: Node) extends Node {
-  lazy val n3 = s"${s.n3} ${p.n3} ${o.n3} ."
+  lazy final val n3 = s"${s.n3} ${p.n3} ${o.n3} ."
 
   override def toString: String = s"$s $p $o"
 }
