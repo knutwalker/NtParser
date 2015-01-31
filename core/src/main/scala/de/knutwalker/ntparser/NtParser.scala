@@ -52,7 +52,9 @@ abstract class NtParser {
 
   private[this] val sb = new StringBuilder
   private[this] val nodes: ListBuffer[Node] = ListBuffer.empty
-  private[this] val statement: Array[Node] = new Array[Node](3)
+  private[this] var parsedSubject: Node = _
+  private[this] var parsedPredicate: Resource = _
+  private[this] var parsedObject: Node = _
 
   /**
    * Parse a single line into a [[Statement]].
@@ -172,8 +174,8 @@ abstract class NtParser {
       case _        ⇒ error(LINE_BEGIN)
     }
 
-    if ((statement(0) ne null) && (statement(1) ne null) && (statement(2) ne null)) {
-      Triple(statement(0), statement(1).asInstanceOf[Resource], statement(2))
+    if ((parsedSubject ne null) && (parsedPredicate ne null) && (parsedObject ne null)) {
+      Triple(parsedSubject, parsedPredicate, parsedObject)
     }
     else null
   }
@@ -187,21 +189,21 @@ abstract class NtParser {
 
   private[this] def Subject(): Unit = {
     (cursor: @switch) match {
-      case '<' ⇒ statement(0) = IriRef()
-      case '_' ⇒ statement(0) = NamedNode()
+      case '<' ⇒ parsedSubject = IriRef()
+      case '_' ⇒ parsedSubject = NamedNode()
       case _   ⇒ error(SUBJECT_BEGIN)
     }
   }
 
   private[this] def Predicate(): Unit = {
-    statement(1) = IriRef()
+    parsedPredicate = IriRef()
   }
 
   private[this] def Object(): Unit = {
     (cursor: @switch) match {
-      case '<' ⇒ statement(2) = IriRef()
-      case '_' ⇒ statement(2) = NamedNode()
-      case '"' ⇒ statement(2) = LiteralNode()
+      case '<' ⇒ parsedObject = IriRef()
+      case '_' ⇒ parsedObject = NamedNode()
+      case '"' ⇒ parsedObject = LiteralNode()
       case _   ⇒ error(OBJECT_BEGIN)
     }
   }
@@ -552,9 +554,9 @@ abstract class NtParser {
   }
 
   private[this] def reset(forLine: String): Unit = {
-    statement(0) = null
-    statement(1) = null
-    statement(2) = null
+    parsedSubject = null
+    parsedPredicate = null
+    parsedObject = null
 
     nodes.clear()
     sb setLength 0
