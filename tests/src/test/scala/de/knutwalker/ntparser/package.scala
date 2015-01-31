@@ -52,21 +52,5 @@ package object ntparser {
       def :<(local: String): JenaResource =
         ResourceFactory.createResource(s + local)
     }
-
   }
-
-  sealed trait Approval
-
-  case object Approved extends Approval
-
-  case object Proposed extends Approval
-
-  sealed trait TestType
-
-  case object Positive extends TestType
-
-  case object Negative extends TestType
-
-  case class TestCase(name: String, comment: String, file: String, testType: TestType, approval: Approval)
-
 }

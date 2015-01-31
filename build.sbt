@@ -1,18 +1,61 @@
-name := """ntparser"""
+organization in ThisBuild := "de.knutwalker"
+homepage in ThisBuild := Some(url("https://github.com/knutwalker/ntparser"))
+licenses in ThisBuild += "Apache License, Verison 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
+scmInfo in ThisBuild := Some(ScmInfo(url("https://github.com/knutwalker/ntparser"), "scm:git:https://github.com/knutwalker/ntparser.git", Some("scm:git:ssh://git@github.com:knutwalker/ntparser.git")))
+startYear in ThisBuild := Some(2014)
 
-organization := "de.knutwalker"
-
-description := "A fast parser for .nt files"
-
-scalaVersion := "2.11.2"
-
-crossScalaVersions := List("2.10.4", "2.11.2")
-
-scalacOptions := List(
-  "-feature",
-  "-unchecked",
+scalacOptions in ThisBuild ++= List(
   "-deprecation",
+  "-encoding", "UTF-8",
+  "-explaintypes",
+  "-feature",
+  "-language:existentials",
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-optimise",
+  "-unchecked",
+  "-Xcheckinit",
+  "-Xfatal-warnings",
+  "-Xfuture",
   "-Xlint",
-  "-Ywarn-dead-code",
-  "-target:jvm-1.7",
-  "-encoding", "UTF-8")
+  "-Xlint:_",
+  "-Xverify",
+  "-Yclosure-elim",
+  "-Ydead-code",
+  "-Yinline",
+  "-Yinline-handlers",
+  "-Yinline-warnings",
+  "-Yno-adapted-args",
+  "-Yno-predef",
+  "-Ywarn-adapted-args",
+  "-Ywarn-inaccessible",
+  "-Ywarn-infer-any",
+  "-Ywarn-nullary-override",
+  "-Ywarn-nullary-unit",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-unused",
+  "-Ywarn-unused-import"
+)
+
+publishMavenStyle in ThisBuild := true
+publishArtifact in ThisBuild in Test := false
+pomIncludeRepository in ThisBuild := { _ => false }
+
+publishTo in ThisBuild := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+pomExtra in ThisBuild :=
+  <developers>
+    <developer>
+      <id>knutwalker</id>
+      <name>Paul Horn</name>
+      <url>http://knutwalker.de/</url>
+    </developer>
+  </developers>
+
+SonatypeKeys.profileName in ThisBuild := "knutwalker"

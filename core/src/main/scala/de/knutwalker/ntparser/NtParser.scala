@@ -18,16 +18,17 @@ package de.knutwalker.ntparser
 
 import org.slf4j.LoggerFactory
 
-import java.io.InputStream
-import java.lang.{ StringBuilder, Iterable ⇒ JIterable }
-import java.nio.charset.Charset
-import java.util.{ Iterator ⇒ JIterator }
-import scala.annotation.{ switch, tailrec }
+import scala.Predef.{assert, classOf}
+import scala.annotation.{switch, tailrec}
 import scala.collection.GenIterable
-import scala.collection.JavaConverters.{ asJavaIteratorConverter, asScalaIteratorConverter }
+import scala.collection.JavaConverters.{asJavaIteratorConverter, asScalaIteratorConverter}
 import scala.collection.mutable.ListBuffer
 import scala.io.Codec
 import scala.util.Try
+import java.io.InputStream
+import java.lang.{Iterable ⇒ JIterable, StringBuilder}
+import java.nio.charset.Charset
+import java.util.{Iterator ⇒ JIterator}
 
 /**
  * An NtParser always parses a single line in different modes, depending
@@ -177,7 +178,7 @@ final class NtParser {
     else null
   }
 
-  private[this] def TripleLine() = {
+  private[this] def TripleLine(): Boolean = {
     Subject()
     Predicate()
     Object()
@@ -385,7 +386,7 @@ final class NtParser {
     r
   }
 
-  private[this] def hexValue(c: Char): Int =
+  @inline private[this] def hexValue(c: Char): Int =
     (c & 0x1f) + ((c >> 6) * 0x19) - 0x10
 
   private[this] def PercentEscapedCharacter(): Unit = {
@@ -422,23 +423,28 @@ final class NtParser {
     else true
   }
 
-  private[this] def ws(c: Char): Boolean = {
+  @inline private[this] def ws(c: Char): Boolean = {
     ws()
     advance(c)
   }
 
-  private[this] def mustAdvance(c: Char): Boolean =
+  @inline private[this] def mustAdvance(c: Char): Boolean =
     advance(c) || error(c)
 
-  private[this] def advance(f: Char ⇒ Boolean): Boolean = {
+  @inline private[this] def advance(f: Char ⇒ Boolean): Boolean = {
     f(cursor) && advance()
   }
 
-  private[this] def advance(s: String): Boolean = {
-    s forall advance
+  @inline private[this] def advance(s: String): Boolean = {
+    _advance(s, 0, s.length)
   }
 
-  private[this] def advance(c: Char): Boolean = {
+  @tailrec
+  private[this] def _advance(s: String, i: Int, l: Int): Boolean = {
+    (i == l) || (advance(s.charAt(i)) && _advance(s, i + 1, l))
+  }
+
+  @inline private[this] def advance(c: Char): Boolean = {
     cursor == c && advance()
   }
 
@@ -453,19 +459,30 @@ final class NtParser {
     else false
   }
 
-  private[this] def error(c: Char): Boolean =
+  @inline private[this] def error(c: Char): Nothing = {
     error(Array(c))
+  }
 
-  private[this] def error(c: Array[Char]): Boolean = {
+  private[this] def error(c: Array[Char]): Nothing = {
     val expected = c.length match {
       case 0 ⇒ "n/a"
-      case 1 ⇒ c.head.toString
-      case n ⇒ s"${c.init.mkString(", ")}, or ${c.last}"
+      case 1 ⇒ c(0).toString
+      case n ⇒ _errorMsg(c, 0, n - 1, new StringBuilder())
     }
     error(expected)
   }
 
-  private[this] def error(s: String): Boolean = {
+  @tailrec
+  private[this] def _errorMsg(cs: Array[Char], i: Int, l: Int, buf: StringBuilder): String = {
+    if (i == l) buf.append(", or ").append(cs(i)).toString
+    else {
+      if (i > 0) buf.append(", ")
+      buf.append(cs(i))
+      _errorMsg(cs, i + 1, l, buf)
+    }
+  }
+
+  private[this] def error(s: String): Nothing = {
     val cursorChar = cursor match {
       case END ⇒ "EOI"
       case x   ⇒ x.toString
@@ -474,12 +491,12 @@ final class NtParser {
     throwError(s"parse error${lineHint}at char ${pos + 1}, expected [$s], but found [$cursorChar]")
   }
 
-  private[this] def validationError(s: String): Boolean = {
+  private[this] def validationError(s: String): Nothing = {
     val lineHint = if (lineNo == -1) " " else s" in line $lineNo "
     throwError(s"parse error${lineHint}at char ${pos + 1}, $s")
   }
 
-  private[this] def throwError(text: String): Boolean = {
+  private[this] def throwError(text: String): Nothing = {
     val line = new String(input, 0, max)
     val mark = (List.fill(pos)(' ') ::: '^' :: Nil).mkString
 
@@ -508,20 +525,20 @@ final class NtParser {
     cursor = input(0)
   }
 
-  private[this] def append(): Unit = append(cursor)
+  @inline private[this] def append(): Unit = append(cursor)
 
-  private[this] def append(c: Char): Unit = sb append c
+  @inline private[this] def append(c: Char): Unit = sb append c
 
-  private[this] def append(bs: Array[Byte]): Unit = append(Codec.fromUTF8(bs))
+  @inline private[this] def append(bs: Array[Byte]): Unit = append(Codec.fromUTF8(bs))
 
-  private[this] def append(cs: Array[Char]): Unit = sb append cs
+  @inline private[this] def append(cs: Array[Char]): Unit = sb append cs
 
-  private[this] def append(cp: Int): Unit = sb appendCodePoint cp
+  @inline private[this] def append(cp: Int): Unit = sb appendCodePoint cp
 
   private[this] def oversize(minTargetSize: Int): Int = {
     if (minTargetSize == 0) 0
     else {
-      val extra = (minTargetSize >> 3) max 3
+      val extra = math.max(minTargetSize >> 3, 3)
       val newSize = minTargetSize + extra
 
       (newSize + 3) & 0x7ffffffc

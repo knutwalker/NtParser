@@ -17,6 +17,7 @@
 package de.knutwalker.ntparser
 
 import org.scalatest.FunSuite
+import scala.Predef.intWrapper
 
 class W3CTestSpec extends FunSuite {
 

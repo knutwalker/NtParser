@@ -20,6 +20,8 @@ import de.knutwalker.ntparser.{ Resource ⇒ ccResource, Literal ⇒ ccLiteral, 
 import org.scalacheck.Gen
 import org.apache.commons.lang3.StringEscapeUtils
 
+import scala.Predef.ArrowAssoc
+
 object NtGen {
 
   def upperAsciiChars(max: Char): Gen[Char] = Gen.chooseNum(127.toChar, max, 223.toChar, 228.toChar, 246.toChar, 252.toChar)

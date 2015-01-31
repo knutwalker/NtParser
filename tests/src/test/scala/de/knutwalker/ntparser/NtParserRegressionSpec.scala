@@ -21,8 +21,8 @@ import org.scalatest.prop.PropertyChecks
 import org.scalacheck.{ Gen, Shrink }
 import scala.collection.mutable.ListBuffer
 
-// format: +preserveSpaceBeforeArguments
-// format: -rewriteArrowSymbols
+import scala.Predef._
+
 class NtParserRegressionSpec extends FlatSpec with Matchers with PropertyChecks {
 
   "The NtParser" should "parse valid lines" in {
