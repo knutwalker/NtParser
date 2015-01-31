@@ -35,7 +35,8 @@ import java.util.concurrent.TimeUnit
 class ParseBenchmark {
 
 //  @Param(Array("category_labels_de.nt", "skos_categories_de.nt", "labels_de.nt", "instance_types_de.nt", "article_categories_de.nt"))
-  @Param(Array("category_labels_de.nt", "skos_categories_de.nt", "labels_de.nt"))
+//  @Param(Array("category_labels_de.nt", "skos_categories_de.nt", "labels_de.nt"))
+  @Param(Array("category_labels_de.nt"))
   var fileName: String = _
 
   private[this] def fileLocation =
@@ -56,7 +57,7 @@ class ParseBenchmark {
   }
 
   @Benchmark
-  def testNtParser(bh: Blackhole): Any = {
+  def testNtParser(bh: Blackhole): Unit = {
     bh.consume(StrictNtParser(fileLocation).foreach(_ ⇒ ()))
   }
 }
