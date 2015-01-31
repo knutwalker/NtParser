@@ -43,7 +43,7 @@ abstract class NtParser {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[NtParser])
 
-  private[this] var input: Array[Char] = new Array[Char](1024)
+  private[this] var input: Array[Char] = new Array[Char](8192)
 
   private[this] var pos = 0
   private[this] var max = 0
