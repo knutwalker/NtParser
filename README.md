@@ -1,15 +1,15 @@
 # NtParser
 
-A simple and well-performing [N-Triples][N-TRIPLES] parser for the JVM.
+A simple and well-performing [N-Triples](http://www.w3.org/TR/2014/REC-n-triples-20140225/ "RDF 1.1 N-Triples") parser for the JVM.
 
 
 ## Installing
 
-NtParser is published to [Maven Central][mvn]:
+NtParser is published to [Maven Central](http://search.maven.org/#search|ga|1|g%3A%22de.knutwalker%22%20AND%20%28a%3A%22ntparser_2.11%22%20OR%20a%3A%22ntparser_2.10%22%29):
 
-group = de.knutwalker
-artifact = ntparser_2.10 or ntparser_2.11
-version: 0.3.0
+- group = de.knutwalker
+- artifact = ntparser_2.10 or ntparser_2.11
+- version: 0.3.0
 
 
 ```xml
@@ -36,7 +36,6 @@ libraryDependencies += "de.knutwalker" %% "ntparser" % "0.3.0"
 You need at least one modelfactory instance as well. Available are:
 - `de.knutwalker:ntparser-model_2.1x:0.3.0`
 - `de.knutwalker:ntparser-jena_2.1x:0.3.0`
-```
 
 
 ## Using
@@ -106,14 +105,4 @@ from Turtle.
 
 ## Specification conformity
 
-NtParser passes [all tests provided by the W3C][rdf-test-cases].
-
-
-## Roadmap
-
-- parse into different data types, e.g. Jena Model
-
-
-[N-TRIPLES]: http://www.w3.org/TR/2014/REC-n-triples-20140225/ "RDF 1.1 N-Triples"
-[mvn]: http://search.maven.org/#search|ga|1|g%3A%22de.knutwalker%22%20AND%20%28a%3A%22ntparser_2.11%22%20OR%20a%3A%22ntparser_2.10%22%29
-[rdf-test-cases]: http://www.w3.org/TR/2014/NOTE-rdf11-testcases-20140225/
+NtParser passes [all tests provided by the W3C](http://www.w3.org/TR/2014/NOTE-rdf11-testcases-20140225/)
