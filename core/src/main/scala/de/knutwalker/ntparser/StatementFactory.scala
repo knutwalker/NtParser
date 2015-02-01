@@ -16,6 +16,8 @@
 
 package de.knutwalker.ntparser
 
+import annotation.implicitNotFound
+
 /**
  * A typeclass (or facade, if you will), that creates different parts
  * of a statement graph. The parser uses this to construct its results.
@@ -26,6 +28,7 @@ package de.knutwalker.ntparser
  * @tparam O The type of the object node.
  * @tparam T The type of a triple or statement node.
  */
+@implicitNotFound("Cannot find a StatementFactory to use for parsing, did you provide one (implicitly)?")
 trait StatementFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
   /**
    * Get called before many lines are parsed, but not when using the

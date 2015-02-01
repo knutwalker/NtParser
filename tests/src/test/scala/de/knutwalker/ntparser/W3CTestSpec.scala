@@ -19,7 +19,6 @@ package de.knutwalker.ntparser
 import de.knutwalker.ntparser.model.{BNode, Resource, Literal, Statement, Triple, ntModel}
 
 import org.scalatest.FunSuite
-import scala.Predef.intWrapper
 
 class W3CTestSpec extends FunSuite {
 

@@ -20,7 +20,10 @@ import de.knutwalker.ntparser.StatementFactory
 
 import com.hp.hpl.jena.rdf.model.{AnonId, Statement, RDFNode, Property, Resource, Model, ModelFactory}
 
-object JenaModelFactory extends JenaModelFactory(ModelFactory.createDefaultModel())
+object JenaModelFactory extends JenaModelFactory(ModelFactory.createDefaultModel()) {
+  /** java api */
+  final val INSTANCE: JenaModelFactory = this
+}
 class JenaModelFactory(val model: Model) extends StatementFactory[Resource, Property, RDFNode, Statement] {
 
   def reset(): Unit =

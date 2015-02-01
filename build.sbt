@@ -24,7 +24,6 @@ scalacOptions in ThisBuild ++= List(
   "-Yinline-handlers",
   "-Yinline-warnings",
   "-Yno-adapted-args",
-  "-Yno-predef",
   "-Ywarn-adapted-args",
   "-Ywarn-inaccessible",
   "-Ywarn-nullary-override",

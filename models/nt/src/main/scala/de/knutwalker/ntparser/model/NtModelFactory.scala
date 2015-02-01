@@ -27,4 +27,7 @@ object NtModelFactory extends StatementFactory[Node, Resource, Node, Statement] 
   def taggedLiteral(lexical: String, lang: String): Node =Literal.tagged(lexical, lang)
   def typedLiteral(lexical: String, dt: String): Node = Literal.typed(lexical, Resource(dt))
   def statement(s: Node, p: Resource, o: Node): Statement = Triple(s, p, o)
+
+  /** java api */
+  final val INSTANCE: StatementFactory[Node, Resource, Node, Statement] = this
 }
