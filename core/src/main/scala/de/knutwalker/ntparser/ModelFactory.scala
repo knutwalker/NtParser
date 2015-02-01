@@ -39,28 +39,28 @@ trait ModelFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
   /**
    * Gets called when a iri-ref node shall be created
    * @param uri the URI for this iri-ref
-   * @return a new instance of [[S]], must never be null.
+   * @return a new instance of `S`, must never be null.
    */
   def iriRef(uri: String): S
 
   /**
    * Gets called when a blank node shall be created
    * @param id the ID for this blank node
-   * @return a new instance of [[S]], must never be null.
+   * @return a new instance of `S`, must never be null.
    */
   def blankNode(id: String): S
 
   /**
    * Gets called when a predicate shall be created
    * @param uri the URI for this predicate
-   * @return a new instance of [[P]], must never be null.
+   * @return a new instance of `P`, must never be null.
    */
   def predicate(uri: String): P
 
   /**
    * Gets called when a new simple literal shall be created
    * @param lexical the value of the literal
-   * @return a new instance of [[O]], must never be null.
+   * @return a new instance of `O`, must never be null.
    */
   def literal(lexical: String): O
 
@@ -68,7 +68,7 @@ trait ModelFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
    * Gets called when a new tagged literal shall be created
    * @param lexical the value of the literal
    * @param lang the language of the literal
-   * @return a new instance of [[O]], must never be null.
+   * @return a new instance of `O`, must never be null.
    */
   def taggedLiteral(lexical: String, lang: String): O
 
@@ -76,7 +76,7 @@ trait ModelFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
    * Gets called when a new typed literal shall be created
    * @param lexical the value of the literal
    * @param dt the URI of the datatype of the literal
-   * @return a new instance of [[O]], must never be null.
+   * @return a new instance of `O`, must never be null.
    */
   def typedLiteral(lexical: String, dt: String): O
 
@@ -85,7 +85,7 @@ trait ModelFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
    * @param s the instance for the subject of this statement
    * @param p the instance for the predicate of this statement
    * @param o the instance for the object of this statement
-   * @return a new instance of [[T]], must never be null.
+   * @return a new instance of `T`, must never be null.
    */
   def statement(s: S, p: P, o: O): T
 }

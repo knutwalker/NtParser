@@ -60,52 +60,52 @@ final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boole
   private[this] var parsedObject: O = _
 
   /**
-   * Parse a single line into a [[T]].
+   * Parse a single line into a `T`.
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
   def parseOpt(line: String): Option[T] = Option(parseOrNull(line))
 
   /**
-   * Parse a single line into a [[T]] that is
+   * Parse a single line into a `T` that is
    * part of a bigger file at some location.
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @param lineNumber The current line number
    * @return Some(statement) if a statement could be parsed, otherwise None
    */
   def parseOpt(line: String, lineNumber: Int): Option[T] = Option(parseOrNull(line, lineNumber))
 
   /**
-   * Parse a single line into a [[T]].
+   * Parse a single line into a `T`.
    *
    * $swallowsErrors
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
   def parseTry(line: String): Try[Option[T]] = Try(Option(parse(line)))
 
   /**
-   * Parse a single line into a [[T]] that is
+   * Parse a single line into a `T` that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @param lineNumber The current line number
    * @return Success(statement) if a statement could be parsed, otherwise Failure(parseError)
    */
   def parseTry(line: String, lineNumber: Int): Try[Option[T]] = Try(Option(parse(line, lineNumber)))
 
   /**
-   * Parse a single line into a [[T]].
+   * Parse a single line into a `T`.
    *
-   * @param line A string that may contain one [[T]]
-   * @return The [[T]] if it could be parsed, or null otherwise
+   * @param line A string that may contain one `T`
+   * @return The `T` if it could be parsed, or null otherwise
    */
   def parseOrNull(line: String): T = {
     try parse(line) catch {
@@ -116,12 +116,12 @@ final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boole
   }
 
   /**
-   * Parse a single line into a [[T]] that is
+   * Parse a single line into a `T` that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @param lineNumber The current line number
-   * @return The [[T]] if it could be parsed, or null otherwise
+   * @return The `T` if it could be parsed, or null otherwise
    */
   def parseOrNull(line: String, lineNumber: Int): T = {
     try parse(line, lineNo) catch {
@@ -132,11 +132,11 @@ final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boole
   }
 
   /**
-   * Parse a single line into a [[T]].
+   * Parse a single line into a `T`.
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @throws ParseError if a line could not be parsed
-   * @return The [[T]] if it could be parsed, otherwise throw a ParseException
+   * @return The `T` if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String): T = {
@@ -149,13 +149,13 @@ final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boole
   }
 
   /**
-   * Parse a single line into a [[T]] that is
+   * Parse a single line into a `T` that is
    * part of a bigger file at some location.
    *
-   * @param line A string that may contain one [[T]]
+   * @param line A string that may contain one `T`
    * @param lineNumber The current line number
    * @throws ParseError if a line could not be parsed
-   * @return The [[T]] if it could be parsed, otherwise throw a ParseException
+   * @return The `T` if it could be parsed, otherwise throw a ParseException
    */
   @throws[ParseError]("ParseError if a line could not be parsed")
   def parse(line: String, lineNumber: Int): T = {
@@ -647,7 +647,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file or resource, assuming UTF-8.
    *
    * @param fileName The name of an nt file or resource
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(fileName, Codec.UTF8)
@@ -657,7 +657,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param fileName The name of an nt file or resource
    * @param codec The codec that will be used to open the file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, codec: Codec)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(fileName, codec))
@@ -666,7 +666,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file from a source.
    *
    * @param source The source of an nt file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](source: Source)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(source.getLines())
@@ -675,7 +675,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an InputStream, assuming UTF-8.
    *
    * @param is the InputStream
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(is, Codec.UTF8)
@@ -685,7 +685,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param is the InputStream
    * @param codec The codec that will be used to read the stream
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, codec: Codec)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(is, codec))
@@ -694,7 +694,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an Iterable of Strings.
    *
    * @param lines An Iterable of all lines of an nt document
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: GenIterable[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(lines.iterator)
@@ -703,7 +703,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an Iterator of Strings.
    *
    * @param lines An Iterator of all lines of an nt document
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     runParser(lines)
@@ -712,7 +712,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file or resource, assuming UTF-8.
    *
    * @param fileName The name of an nt file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(fileName)(factory).asJava
@@ -722,7 +722,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param fileName The name of an nt file
    * @param encoding The encoding that will be used to open the file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(fileName, Codec.charset2codec(encoding))(factory).asJava
@@ -731,7 +731,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file, assuming UTF-8.
    *
    * @param file The file object of an nt file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     parse(file.toPath, factory)
@@ -741,7 +741,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param file The file object of an nt file
    * @param encoding The encoding that will be used to open the file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     parse(file.toPath, encoding, factory)
@@ -750,7 +750,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse a file, assuming UTF-8.
    *
    * @param path The path object of an nt file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(Files.newInputStream(path, StandardOpenOption.READ))(factory).asJava
@@ -760,7 +760,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param path The path object of an nt file
    * @param encoding The encoding that will be used to open the file
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(Files.newInputStream(path, StandardOpenOption.READ), Codec.charset2codec(encoding))(factory).asJava
@@ -769,7 +769,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an InputStream, assuming UTF-8.
    *
    * @param is the InputStream
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(is)(factory).asJava
@@ -779,7 +779,7 @@ private[ntparser] trait NtParserCompanion {
    *
    * @param is the InputStream
    * @param encoding The encoding that will be used to read the stream
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(is, Codec.charset2codec(encoding))(factory).asJava
@@ -788,7 +788,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an Iterable of Strings.
    *
    * @param lines An Iterable of all lines of an nt document
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterable[String], factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(lines.iterator().asScala)(factory).asJava
@@ -797,7 +797,7 @@ private[ntparser] trait NtParserCompanion {
    * Parse lines from an Iterator of Strings.
    *
    * @param lines An Iterator of all lines of an nt document
-   * @return An Iterator of all [[T]]s
+   * @return An Iterator of all `T`s
    */
   final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterator[String], factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(lines.asScala)(factory).asJava
