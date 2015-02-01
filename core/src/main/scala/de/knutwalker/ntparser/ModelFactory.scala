@@ -28,8 +28,8 @@ import annotation.implicitNotFound
  * @tparam O The type of the object node.
  * @tparam T The type of a triple or statement node.
  */
-@implicitNotFound("Cannot find a StatementFactory to use for parsing, did you provide one (implicitly)?")
-trait StatementFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
+@implicitNotFound("Cannot find a ModelFactory to use for parsing, did you provide one (implicitly)?")
+trait ModelFactory[S <: O, P <: S, O <: AnyRef, T <: AnyRef] {
   /**
    * Get called before many lines are parsed, but not when using the
    * raw parser.

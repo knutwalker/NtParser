@@ -20,5 +20,5 @@ import com.hp.hpl.jena.rdf.model.{Statement, RDFNode, Property, Resource}
 
 
 package object jena {
-  implicit final val jenaModel: StatementFactory[Resource, Property, RDFNode, Statement] = JenaModelFactory
+  implicit final val jenaModel: ModelFactory[Resource, Property, RDFNode, Statement] = JenaModelFactory
 }

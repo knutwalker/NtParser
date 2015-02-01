@@ -22,9 +22,8 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDatatype
 import org.scalatest.FunSuite
 
 import scala.collection.JavaConverters._
-import scala.Predef.println
 
-class StatementFactorySpec extends FunSuite {
+class ModelFactorySpec extends FunSuite {
 
   test("parse simple line") {
     val line = "_:abc <d:ef> \"ghi\" ."

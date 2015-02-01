@@ -42,7 +42,7 @@ import java.util.{Iterator ⇒ JIterator}
  * @tparam O The type for a object node
  * @tparam T The type for a triple or statement of (subject, predicate, object)
  */
-final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boolean)(implicit factory: StatementFactory[S, P, O, T]) {
+final class NtParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](strictMode: Boolean)(implicit factory: ModelFactory[S, P, O, T]) {
   import de.knutwalker.ntparser.NtParser._
 
   private[this] val logger = LoggerFactory.getLogger(classOf[NtParser[S, P, O, T]])
@@ -637,9 +637,9 @@ object NtParser {
   private final val IS_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\' && c != '\n' && c != '\r'
   private final val IS_LONG_LITERAL_CHAR = (c: Char) ⇒ c != '"' && c != '\\'
 
-  def strict[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]): NtParser[S, P, O, T] =
+  def strict[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: ModelFactory[S, P, O, T]): NtParser[S, P, O, T] =
     new NtParser[S, P, O, T](strictMode = true)
-  def lenient[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: StatementFactory[S, P, O, T]): NtParser[S, P, O, T] =
+  def lenient[S <: O, P <: S, O <: AnyRef, T <: AnyRef](implicit factory: ModelFactory[S, P, O, T]): NtParser[S, P, O, T] =
     new NtParser[S, P, O, T](strictMode = false)
 }
 private[ntparser] trait NtParserCompanion {
@@ -649,7 +649,7 @@ private[ntparser] trait NtParserCompanion {
    * @param fileName The name of an nt file or resource
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(fileName, Codec.UTF8)
 
   /**
@@ -659,7 +659,7 @@ private[ntparser] trait NtParserCompanion {
    * @param codec The codec that will be used to open the file
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, codec: Codec)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, codec: Codec)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(fileName, codec))
 
   /**
@@ -668,7 +668,7 @@ private[ntparser] trait NtParserCompanion {
    * @param source The source of an nt file
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](source: Source)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](source: Source)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(source.getLines())
 
   /**
@@ -677,7 +677,7 @@ private[ntparser] trait NtParserCompanion {
    * @param is the InputStream
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(is, Codec.UTF8)
 
   /**
@@ -687,7 +687,7 @@ private[ntparser] trait NtParserCompanion {
    * @param codec The codec that will be used to read the stream
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, codec: Codec)(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, codec: Codec)(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(Loader.getLines(is, codec))
 
   /**
@@ -696,7 +696,7 @@ private[ntparser] trait NtParserCompanion {
    * @param lines An Iterable of all lines of an nt document
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: GenIterable[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: GenIterable[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     apply(lines.iterator)
 
   /**
@@ -705,7 +705,7 @@ private[ntparser] trait NtParserCompanion {
    * @param lines An Iterator of all lines of an nt document
    * @return An Iterator of all [[T]]s
    */
-  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  final def apply[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     runParser(lines)
 
   /**
@@ -714,7 +714,7 @@ private[ntparser] trait NtParserCompanion {
    * @param fileName The name of an nt file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(fileName)(factory).asJava
 
   /**
@@ -724,7 +724,7 @@ private[ntparser] trait NtParserCompanion {
    * @param encoding The encoding that will be used to open the file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](fileName: String, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(fileName, Codec.charset2codec(encoding))(factory).asJava
 
   /**
@@ -733,7 +733,7 @@ private[ntparser] trait NtParserCompanion {
    * @param file The file object of an nt file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     parse(file.toPath, factory)
 
   /**
@@ -743,7 +743,7 @@ private[ntparser] trait NtParserCompanion {
    * @param encoding The encoding that will be used to open the file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](file: File, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     parse(file.toPath, encoding, factory)
 
   /**
@@ -752,7 +752,7 @@ private[ntparser] trait NtParserCompanion {
    * @param path The path object of an nt file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(Files.newInputStream(path, StandardOpenOption.READ))(factory).asJava
 
   /**
@@ -762,7 +762,7 @@ private[ntparser] trait NtParserCompanion {
    * @param encoding The encoding that will be used to open the file
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](path: Path, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(Files.newInputStream(path, StandardOpenOption.READ), Codec.charset2codec(encoding))(factory).asJava
 
   /**
@@ -771,7 +771,7 @@ private[ntparser] trait NtParserCompanion {
    * @param is the InputStream
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(is)(factory).asJava
 
   /**
@@ -781,7 +781,7 @@ private[ntparser] trait NtParserCompanion {
    * @param encoding The encoding that will be used to read the stream
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, encoding: Charset, factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](is: InputStream, encoding: Charset, factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(is, Codec.charset2codec(encoding))(factory).asJava
 
   /**
@@ -790,7 +790,7 @@ private[ntparser] trait NtParserCompanion {
    * @param lines An Iterable of all lines of an nt document
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterable[String], factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterable[String], factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(lines.iterator().asScala)(factory).asJava
 
   /**
@@ -799,7 +799,7 @@ private[ntparser] trait NtParserCompanion {
    * @param lines An Iterator of all lines of an nt document
    * @return An Iterator of all [[T]]s
    */
-  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterator[String], factory: StatementFactory[S, P, O, T]): JIterator[T] =
+  final def parse[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: JIterator[String], factory: ModelFactory[S, P, O, T]): JIterator[T] =
     apply(lines.asScala)(factory).asJava
 
   /**
@@ -810,12 +810,12 @@ private[ntparser] trait NtParserCompanion {
   final def close(): Unit =
     Loader.shutdown()
 
-  private def runParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] = {
+  private def runParser[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] = {
     factory.reset()
     parsingIterator(lines)
   }
 
-  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T]
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T]
 }
 
 /**
@@ -823,7 +823,7 @@ private[ntparser] trait NtParserCompanion {
  */
 object StrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     new ParsingIterator(NtParser.strict, lines)
 
   private class ParsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](p: NtParser[S, P, O, T], underlying: Iterator[String]) extends Iterator[T] {
@@ -862,7 +862,7 @@ object StrictNtParser extends NtParserCompanion {
  */
 object NonStrictNtParser extends NtParserCompanion {
 
-  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: StatementFactory[S, P, O, T]): Iterator[T] =
+  protected def parsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](lines: Iterator[String])(implicit factory: ModelFactory[S, P, O, T]): Iterator[T] =
     new ParsingIterator(NtParser.lenient, lines)
 
   private class ParsingIterator[S <: O, P <: S, O <: AnyRef, T <: AnyRef](p: NtParser[S, P, O, T], underlying: Iterator[String]) extends Iterator[T] {

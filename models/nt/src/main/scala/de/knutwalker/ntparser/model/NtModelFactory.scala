@@ -16,9 +16,9 @@
 
 package de.knutwalker.ntparser.model
 
-import de.knutwalker.ntparser.StatementFactory
+import de.knutwalker.ntparser.ModelFactory
 
-object NtModelFactory extends StatementFactory[Node, Resource, Node, Statement] {
+object NtModelFactory extends ModelFactory[Node, Resource, Node, Statement] {
   def reset(): Unit = ()
   def iriRef(uri: String): Node = Resource(uri)
   def blankNode(id: String): Node = BNode(id)
@@ -29,5 +29,5 @@ object NtModelFactory extends StatementFactory[Node, Resource, Node, Statement] 
   def statement(s: Node, p: Resource, o: Node): Statement = Triple(s, p, o)
 
   /** java api */
-  final val INSTANCE: StatementFactory[Node, Resource, Node, Statement] = this
+  final val INSTANCE: ModelFactory[Node, Resource, Node, Statement] = this
 }

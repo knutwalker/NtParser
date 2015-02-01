@@ -18,5 +18,5 @@ package de.knutwalker.ntparser
 
 package object model {
 
-  implicit final val ntModel: StatementFactory[Node, Resource, Node, Statement] = NtModelFactory
+  implicit final val ntModel: ModelFactory[Node, Resource, Node, Statement] = NtModelFactory
 }

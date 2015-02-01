@@ -16,15 +16,15 @@
 
 package de.knutwalker.ntparser.jena
 
-import de.knutwalker.ntparser.StatementFactory
+import de.knutwalker.ntparser.ModelFactory
 
-import com.hp.hpl.jena.rdf.model.{AnonId, Statement, RDFNode, Property, Resource, Model, ModelFactory}
+import com.hp.hpl.jena.rdf.model.{AnonId, Statement, RDFNode, Property, Resource, Model, ModelFactory ⇒ JModelFactory}
 
-object JenaModelFactory extends JenaModelFactory(ModelFactory.createDefaultModel()) {
+object JenaModelFactory extends JenaModelFactory(JModelFactory.createDefaultModel()) {
   /** java api */
   final val INSTANCE: JenaModelFactory = this
 }
-class JenaModelFactory(val model: Model) extends StatementFactory[Resource, Property, RDFNode, Statement] {
+class JenaModelFactory(val model: Model) extends ModelFactory[Resource, Property, RDFNode, Statement] {
 
   def reset(): Unit =
     model.removeAll()
