@@ -19,7 +19,6 @@ package de.knutwalker.ntparser.examples;
 import de.knutwalker.ntparser.ModelFactory;
 import de.knutwalker.ntparser.StrictNtParser;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -70,11 +69,10 @@ public class ModelFactoryJava {
 
   public static void main(String[] args) {
 
-    InputStream inputStream = ModelFactoryJava.class.getResourceAsStream("/dnb_dump_000001.nt");
-    Iterator<String[]> statementIterator = StrictNtParser.parse(inputStream, StringsModel.INSTANCE);
+    Iterator<String[]> statements = StrictNtParser.parse("dnb_dump_000001.nt", StringsModel.INSTANCE);
 
-    while (statementIterator.hasNext()) {
-      String[] stmt = statementIterator.next();
+    while (statements.hasNext()) {
+      String[] stmt = statements.next();
       System.out.println(Arrays.toString(stmt));
     }
   }

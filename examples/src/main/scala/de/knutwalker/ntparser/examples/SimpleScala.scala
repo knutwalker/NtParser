@@ -21,8 +21,7 @@ import de.knutwalker.ntparser.model.ntModel
 
 object SimpleScala extends App {
 
-  val inputStream = getClass.getResourceAsStream("/dnb_dump_000001.nt")
-  StrictNtParser(inputStream) foreach { stmt ⇒
+  StrictNtParser("dnb_dump_000001.nt") foreach { stmt ⇒
     println(stmt.n3)
   }
 

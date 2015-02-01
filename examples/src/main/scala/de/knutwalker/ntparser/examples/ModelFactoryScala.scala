@@ -31,8 +31,7 @@ object ModelFactoryScala extends App {
     def reset(): Unit = {}
   }
 
-  val inputStream = getClass.getResourceAsStream("/dnb_dump_000001.nt")
-  StrictNtParser(inputStream) foreach { a ⇒
+  StrictNtParser("dnb_dump_000001.nt") foreach { a ⇒
     println(a.mkString("[", ", ", "]"))
   }
 }

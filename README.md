@@ -86,6 +86,10 @@ There are two implementations available in the artifacts `ntparser-model` and
 produces a Jena model. You can also implement the interface
 `de.knutwalker.ntparser.ModelFactory` to include different backends.
 
+Using the String overloading is the easiest way to get started. The parameter
+is tried as a filename or the name of a resource, if the file does not exists.
+Also, gzipped and bzipped files will be handled transparently.
+
 If you provide a String, it is treated as the filename. NtParser transparently
 handles gzipped and bzipped files as well, if you use this overloading.
 Other options include providing a `scala.io.Source`, for the Scala API

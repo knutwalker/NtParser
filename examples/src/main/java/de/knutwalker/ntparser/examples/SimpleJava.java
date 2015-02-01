@@ -20,7 +20,6 @@ import de.knutwalker.ntparser.StrictNtParser;
 import de.knutwalker.ntparser.model.NtModelFactory;
 import de.knutwalker.ntparser.model.Statement;
 
-import java.io.InputStream;
 import java.util.Iterator;
 
 
@@ -28,11 +27,10 @@ public class SimpleJava {
 
   public static void main(String[] args) {
 
-    InputStream inputStream = SimpleJava.class.getResourceAsStream("/dnb_dump_000001.nt");
-    Iterator<Statement> statementIterator = StrictNtParser.parse(inputStream, NtModelFactory.INSTANCE());
+    Iterator<Statement> statements = StrictNtParser.parse("dnb_dump_000001.nt", NtModelFactory.INSTANCE());
 
-    while (statementIterator.hasNext()) {
-      Statement stmt = statementIterator.next();
+    while (statements.hasNext()) {
+      Statement stmt = statements.next();
       System.out.println(stmt.n3());
     }
   }
