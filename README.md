@@ -1,3 +1,8 @@
+[![Travis CI](https://img.shields.io/travis/knutwalker/NtParser/master.svg)](https://travis-ci.org/knutwalker/NtParser)
+[![Coverage Status](https://img.shields.io/coveralls/knutwalker/NtParser/master.svg)](https://coveralls.io/r/knutwalker/NtParser)
+[![Maven](https://img.shields.io/maven-central/v/de.knutwalker/ntparser_2.11.svg)](http://search.maven.org/#search|ga|1|g%3A%22de.knutwalker%22%20AND%20a%3Antparser*)
+[![Apache License](https://img.shields.io/badge/license-APACHE_2-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 # NtParser
 
 A simple and well-performing [N-Triples](http://www.w3.org/TR/2014/REC-n-triples-20140225/ "RDF 1.1 N-Triples") parser for the JVM.

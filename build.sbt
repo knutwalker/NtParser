@@ -3,6 +3,7 @@ import de.heikoseeberger.sbtheader.license.Apache2_0
 import sbtrelease.ReleasePlugin.ReleaseKeys._
 import sbtrelease.ReleaseStateTransformations._
 import sbtrelease.ReleaseStep
+import ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages
 import xerial.sbt.Sonatype.SonatypeKeys.{profileName, sonatypeReleaseAll}
 
 lazy val core = project enablePlugins AutomateHeaderPlugin settings (
@@ -120,7 +121,8 @@ lazy val otherSettings = List(
     Map(
       "java"  -> Apache2_0(years, maintainer.value),
       "scala" -> Apache2_0(years, maintainer.value))
-  })
+  },
+  coverageExcludedPackages := "de.knutwalker.ntparser.examples.*")
 
 
 lazy val publishThis = releaseSettings ++ sonatypeSettings ++ List(
@@ -190,3 +192,5 @@ lazy val releaseToCentral = ReleaseStep({ state =>
   val ref = extracted get thisProjectRef
   extracted.runAggregated(sonatypeReleaseAll in Global in ref, state)
 }, enableCrossBuild = true)
+
+addCommandAlias("travis", ";clean;coverage;test;coverageReport;coverageAggregate")
