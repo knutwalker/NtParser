@@ -1,5 +1,5 @@
-[![Travis CI](https://img.shields.io/travis/knutwalker/NtParser/master.svg)](https://travis-ci.org/knutwalker/NtParser)
-[![Coverage Status](https://img.shields.io/coveralls/knutwalker/NtParser/master.svg)](https://coveralls.io/r/knutwalker/NtParser)
+[![Travis CI](https://img.shields.io/travis/knutwalker/NtParser/develop.svg)](https://travis-ci.org/knutwalker/NtParser)
+[![Coverage Status](https://img.shields.io/coveralls/knutwalker/NtParser/develop.svg)](https://coveralls.io/r/knutwalker/NtParser)
 [![Maven](https://img.shields.io/maven-central/v/de.knutwalker/ntparser_2.11.svg)](http://search.maven.org/#search|ga|1|g%3A%22de.knutwalker%22%20AND%20a%3Antparser*)
 [![Apache License](https://img.shields.io/badge/license-APACHE_2-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
