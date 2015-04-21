@@ -12,7 +12,7 @@ lazy val core = project enablePlugins AutomateHeaderPlugin settings (
   name := "ntparser",
   libraryDependencies ++= List(
     "org.apache.commons" % "commons-compress" % "1.9",
-    "org.slf4j"          % "slf4j-api"        % "1.7.10"))
+    "org.slf4j"          % "slf4j-api"        % "1.7.12"))
 
 
 lazy val model = project in file("models") / "nt" enablePlugins AutomateHeaderPlugin dependsOn core settings (
@@ -25,7 +25,7 @@ lazy val jena = project in file("models") / "jena" enablePlugins AutomateHeaderP
   ntparserSettings,
   publishThis,
   name := "ntparser-jena",
-  libraryDependencies += "org.apache.jena" % "jena-core" % "2.12.1")
+  libraryDependencies += "org.apache.jena" % "jena-core" % "2.13.0")
 
 
 lazy val examples = project enablePlugins AutomateHeaderPlugin dependsOn (core, model, jena) settings ntparserSettings
@@ -35,8 +35,8 @@ lazy val tests = project enablePlugins AutomateHeaderPlugin dependsOn (core, mod
   ntparserSettings,
   libraryDependencies ++= List(
     "org.scalatest"     %% "scalatest"     % "2.2.4"  % "test",
-    "org.scalacheck"    %% "scalacheck"    % "1.12.1" % "test",
-    "org.apache.commons" % "commons-lang3" % "3.3.2"  % "test"))
+    "org.scalacheck"    %% "scalacheck"    % "1.12.2" % "test",
+    "org.apache.commons" % "commons-lang3" % "3.4"    % "test"))
 
 
 lazy val parent = project in file(".") aggregate (core, model, jena, examples, tests) dependsOn (core, model, jena, examples, tests) settings ntparserSettings
