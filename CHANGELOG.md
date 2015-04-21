@@ -9,16 +9,21 @@ one version to the right, so it is considered `0.MAJOR.MINOR`.
 
 
 ## [Unreleased][unreleased]
+### Improved
+- Single file build definition for sbt 0.13.8
+
 
 ## [0.3.0][0.3.0] - 2015-02-01
 ### Added
 - Typeclass for pluggable model backends
 - Artifacts for different model backends (nt and jena)
 
+
 ## [0.2.0][0.2.0] - 2014-01-31
 ### Added
 - Lenient parsing, that accepts long quotes ('"""'), which are part of
   the Turtle spec, but not part of the N-Triple spec
+
 
 ## [0.1.0][0.1.0] - 2014-09-18
 ### Added
