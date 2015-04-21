@@ -23,6 +23,7 @@ import java.io.{ Closeable, InputStream, PushbackInputStream }
 import java.nio.charset.Charset
 import java.nio.file.{ FileSystems, Files, Path, StandardOpenOption }
 import scala.io.{ Codec, Source }
+import scala.util.Try
 
 private[ntparser] object Loader {
 
@@ -96,12 +97,13 @@ private[ntparser] object Loader {
 
     private def peekBytes(stream: PushbackInputStream, n: Int): Option[Array[Byte]] = {
       val buf = new Array[Byte](n)
-      val bytesRead = stream.read(buf)
-      if (bytesRead == -1) None
-      else {
-        stream.unread(buf, 0, bytesRead)
-        if (bytesRead == n) Some(buf)
-        else None
+      Try(stream.read(buf)).toOption.flatMap { bytesRead =>
+        if (bytesRead == -1) None
+        else {
+          stream.unread(buf, 0, bytesRead)
+          if (bytesRead == n) Some(buf)
+          else None
+        }
       }
     }
   }
